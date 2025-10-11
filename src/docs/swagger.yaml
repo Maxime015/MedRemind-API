@@ -1,0 +1,694 @@
+openapi: 3.0.0
+info:
+  title: Budget Manager API
+  description: API de gestion de budget, transactions et abonnements
+  version: 1.0.0
+  contact:
+    name: Support API
+    email: support@budgetmanager.com
+
+servers:
+  - url: http://localhost:3000/api
+    description: Serveur de développement
+  - url: https://votre-domaine.com/api
+    description: Serveur de production
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        username:
+          type: string
+          example: "johndoe"
+        email:
+          type: string
+          example: "john@example.com"
+        profileImage:
+          type: string
+          example: "https://api.dicebear.com/7.x/avataaars/svg?seed=johndoe"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2023-01-01T10:00:00Z"
+
+    AuthResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Utilisateur créé avec succès"
+        token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        user:
+          $ref: '#/components/schemas/User'
+
+    Budget:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Budget Alimentaire"
+        amount:
+          type: number
+          format: float
+          example: 500.00
+        category:
+          type: string
+          example: "food"
+        created_at:
+          type: string
+          format: date-time
+          example: "2023-01-01T10:00:00Z"
+
+    BudgetSummary:
+      type: object
+      properties:
+        budget_id:
+          type: integer
+          example: 1
+        budget_name:
+          type: string
+          example: "Budget Alimentaire"
+        transaction_count:
+          type: integer
+          example: 5
+        total_spent:
+          type: number
+          format: float
+          example: 350.00
+        budget_total:
+          type: number
+          format: float
+          example: 500.00
+        remaining_amount:
+          type: number
+          format: float
+          example: 150.00
+        percentage_used:
+          type: number
+          format: float
+          example: 70.0
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        budget_id:
+          type: integer
+          example: 1
+        description:
+          type: string
+          example: "Courses supermarché"
+        amount:
+          type: number
+          format: float
+          example: 45.50
+        category:
+          type: string
+          example: "food"
+        created_at:
+          type: string
+          format: date-time
+          example: "2023-01-01T10:00:00Z"
+
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        label:
+          type: string
+          example: "Netflix"
+        amount:
+          type: number
+          format: float
+          example: 15.99
+        date:
+          type: string
+          format: date
+          example: "2023-01-15"
+        recurrence:
+          type: string
+          enum: ["monthly", "yearly", "weekly"]
+          example: "monthly"
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 4
+        image_url:
+          type: string
+          nullable: true
+          example: "https://res.cloudinary.com/.../netflix.jpg"
+        created_at:
+          type: string
+          format: date-time
+          example: "2023-01-01T10:00:00Z"
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Erreur interne du serveur"
+        error:
+          type: string
+          example: "Description détaillée de l'erreur"
+
+paths:
+  # =========================================
+  # ROUTES D'AUTHENTIFICATION
+  # =========================================
+  /auth/register:
+    post:
+      summary: "Inscription d'un nouvel utilisateur"
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - email
+                - password
+              properties:
+                username:
+                  type: string
+                  minLength: 3
+                  example: "johndoe"
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                password:
+                  type: string
+                  minLength: 6
+                  example: "password123"
+      responses:
+        201:
+          description: "Utilisateur créé avec succès"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        400:
+          description: "Données invalides ou utilisateur existant"
+        500:
+          description: "Erreur interne du serveur"
+
+  /auth/login:
+    post:
+      summary: "Connexion utilisateur"
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                password:
+                  type: string
+                  example: "password123"
+      responses:
+        200:
+          description: "Connexion réussie"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        400:
+          description: "Identifiants invalides"
+        500:
+          description: "Erreur interne du serveur"
+
+  /auth/profile-images:
+    get:
+      summary: "Récupération des images de profil des utilisateurs"
+      tags: [Authentication]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: "Images récupérées avec succès"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        username:
+                          type: string
+                        profileImage:
+                          type: string
+        500:
+          description: "Erreur interne du serveur"
+
+  # =========================================
+  # ROUTES DE BUDGETS
+  # =========================================
+  /budgets:
+    post:
+      summary: "Création d'un nouveau budget"
+      tags: [Budgets]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - amount
+                - category
+              properties:
+                name:
+                  type: string
+                  example: "Budget Alimentaire"
+                amount:
+                  type: number
+                  format: float
+                  example: 500.00
+                category:
+                  type: string
+                  example: "food"
+      responses:
+        201:
+          description: "Budget créé avec succès"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  budget:
+                    $ref: '#/components/schemas/Budget'
+        400:
+          description: "Données invalides"
+        500:
+          description: "Erreur interne du serveur"
+
+  /budgets/{budgetId}:
+    delete:
+      summary: "Suppression d'un budget"
+      tags: [Budgets]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: budgetId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: "Budget supprimé avec succès"
+        404:
+          description: "Budget non trouvé"
+        500:
+          description: "Erreur interne du serveur"
+
+  /budgets/reached:
+    get:
+      summary: "Récupération du nombre de budgets atteints"
+      tags: [Budgets]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: "Nombre de budgets atteints récupéré"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Budgets atteints : 2/5"
+        500:
+          description: "Erreur interne du serveur"
+
+  /budgets/all-summaries:
+    get:
+      summary: "Récupération du résumé de tous les budgets"
+      tags: [Budgets]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: "Résumé des budgets récupéré avec succès"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  budgets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BudgetSummary'
+        500:
+          description: "Erreur interne du serveur"
+
+  # =========================================
+  # ROUTES D'ABONNEMENTS
+  # =========================================
+  /subscriptions/{userId}:
+    get:
+      summary: "Récupération des abonnements d'un utilisateur"
+      tags: [Subscriptions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: "Abonnements récupérés avec succès"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Subscription'
+        500:
+          description: "Erreur interne du serveur"
+
+  /subscriptions:
+    post:
+      summary: "Création d'un nouvel abonnement"
+      tags: [Subscriptions]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - label
+                - amount
+                - date
+                - recurrence
+                - rating
+              properties:
+                label:
+                  type: string
+                  example: "Netflix"
+                amount:
+                  type: number
+                  format: float
+                  example: 15.99
+                date:
+                  type: string
+                  format: date
+                  example: "2023-01-15"
+                recurrence:
+                  type: string
+                  enum: ["monthly", "yearly", "weekly"]
+                  example: "monthly"
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  example: 4
+                image:
+                  type: string
+                  nullable: true
+                  description: "Image en base64 (optionnelle)"
+      responses:
+        201:
+          description: "Abonnement créé avec succès"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  subscription:
+                    $ref: '#/components/schemas/Subscription'
+        400:
+          description: "Données invalides"
+        500:
+          description: "Erreur interne du serveur"
+
+  /subscriptions/{id}:
+    delete:
+      summary: "Suppression d'un abonnement"
+      tags: [Subscriptions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: "Abonnement supprimé avec succès"
+        404:
+          description: "Abonnement non trouvé"
+        500:
+          description: "Erreur interne du serveur"
+
+  /subscriptions/summary/{userId}:
+    get:
+      summary: "Récupération du résumé des abonnements"
+      tags: [Subscriptions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: "Résumé récupéré avec succès"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  total:
+                    type: number
+                    format: float
+                    example: 65.97
+                  count:
+                    type: integer
+                    example: 3
+        500:
+          description: "Erreur interne du serveur"
+
+  # =========================================
+  # ROUTES DE TRANSACTIONS
+  # =========================================
+  /transactions:
+    post:
+      summary: "Création d'une transaction"
+      tags: [Transactions]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - budget_id
+                - amount
+                - description
+              properties:
+                budget_id:
+                  type: integer
+                  example: 1
+                amount:
+                  type: number
+                  format: float
+                  example: 45.50
+                description:
+                  type: string
+                  example: "Courses supermarché"
+      responses:
+        201:
+          description: "Transaction créée avec succès"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  transaction:
+                    $ref: '#/components/schemas/Transaction'
+        400:
+          description: "Données invalides ou budget dépassé"
+        404:
+          description: "Budget non trouvé"
+        500:
+          description: "Erreur interne du serveur"
+
+    get:
+      summary: "Récupération de toutes les transactions de l'utilisateur"
+      tags: [Transactions]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: "Transactions récupérées avec succès"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  transactions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Transaction'
+        500:
+          description: "Erreur interne du serveur"
+
+  /transactions/budget/{budgetId}:
+    get:
+      summary: "Récupération des transactions d'un budget spécifique"
+      tags: [Transactions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: budgetId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: "Transactions récupérées avec succès"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  transactions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Transaction'
+        404:
+          description: "Budget non trouvé"
+        500:
+          description: "Erreur interne du serveur"
+
+  /transactions/{transactionId}:
+    delete:
+      summary: "Suppression d'une transaction"
+      tags: [Transactions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: "Transaction supprimée avec succès"
+        404:
+          description: "Transaction non trouvée"
+        500:
+          description: "Erreur interne du serveur"
+
+  /transactions/summary:
+    get:
+      summary: "Récupération du résumé financier"
+      tags: [Transactions]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: "Résumé financier récupéré avec succès"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  solde:
+                    type: number
+                    format: float
+                    example: 1500.00
+                  revenus:
+                    type: number
+                    format: float
+                    example: 3000.00
+                  depenses:
+                    type: number
+                    format: float
+                    example: 1500.00
+        500:
+          description: "Erreur interne du serveur"
