@@ -1,211 +1,334 @@
-# 💸 **Budget Manager**  
-### Application Web de Gestion Budgétaire & Sociale
+# 💰 **e-Track API**
 
-<p align="center">
-  <img src="https://img.shields.io/badge/version-1.0.0-blue?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Node.js-18+-green?style=for-the-badge&logo=node.js" />
-  <img src="https://img.shields.io/badge/PostgreSQL-Supported-blue?style=for-the-badge&logo=postgresql" />
-</p>
+Une **API RESTful moderne** pour la **gestion de budgets, transactions et abonnements**, développée avec **Node.js** et **Express**.  
+Elle offre une solution **performante**, **sécurisée** et **extensible** pour le suivi des dépenses et des revenus.
 
 ---
 
-## 🚀 **Présentation**
+## 🧱 **Structure du Projet**
 
-**Budget Manager** est une application web complète de gestion financière personnelle avec des fonctionnalités **sociales**.  
-Elle permet de **suivre vos budgets**, **gérer vos transactions**, **maîtriser vos abonnements**, et **interagir avec une communauté** d’utilisateurs.
-
----
-
-## ✨ **Fonctionnalités Principales**
-
-### 💰 **Gestion Budgétaire**
-- ✅ Création et suivi de budgets personnalisés  
-- 📊 Tableaux de bord visuels avec indicateurs d’utilisation  
-- 🏷️ Catégorisation intelligente des budgets  
-- 📈 Statistiques et rapports détaillés  
-- 🔔 Alertes de dépassement  
-
-### 💳 **Gestion des Transactions**
-- ➕ Enregistrement de revenus & dépenses  
-- 🗂️ Association automatique aux budgets  
-- 📅 Filtres temporels (7, 30, 90, 365 jours)  
-- 💵 Résumé financier complet  
-- 🗑️ Modification / suppression intuitive  
-
-### 🔔 **Suivi des Abonnements**
-- 📱 Gestion de tous vos abonnements (Netflix, Spotify, etc.)  
-- 💰 Calcul automatique du coût mensuel/annuel  
-- ⭐ Système de notation (1–5 étoiles)  
-- 🖼️ Upload d’images (Cloudinary)  
-- 📅 Rappels automatiques de renouvellement  
-
-### 🛒 **Liste de Courses Collaborative**
-- 📝 Création et partage de listes  
-- ✅ Cocher/décocher les articles  
-- 👥 Multi-utilisateurs  
-- 📊 Statistiques du nombre d’articles  
-- 🧹 Nettoyage rapide des listes  
-
-### 👥 **Réseau Social Intégré**
-- 📝 Création de posts (texte + image)  
-- 💬 Système de commentaires  
-- ❤️ Likes et interactions  
-- 👥 Système de followers  
-- 🔔 Notifications en temps réel  
-
-### 🔐 **Sécurité et Authentification**
-- 🔒 Authentification JWT sécurisée  
-- 🔑 Hachage des mots de passe avec bcrypt  
-- 🛡️ Middleware de protection des routes  
-- ⚡ Rate limiting via Upstash Redis  
-- 📧 Validation d’emails
+```plaintext
+backend/
+├── 📁 config/                # Configuration de l'application
+│   ├── 🗄️ db.js              # Base de données PostgreSQL (Neon)
+│   ├── 🔐 arcjet.js          # Sécurité Arcjet
+│   ├── ⚡ upstash.js         # Redis Upstash
+│   ├── ☁️ cloudinary.js     # Cloudinary
+│   ├── 🔧 env.js            # Variables d'environnement
+│   └── ⏰ cron.js           # Tâches planifiées
+│
+├── 📁 controllers/          # Logique métier
+│   ├── 🔐 authController.js
+│   ├── 📊 budgetController.js
+│   ├── 💳 transactionController.js
+│   └── 📅 subscriptionController.js
+│
+├── 📁 middleware/           # Middlewares personnalisés
+│   ├── 🛡️ auth.middleware.js
+│   ├── 🚦 rateLimiter.js
+│   └── 🧱 arcjet.middleware.js
+│
+├── 📁 routes/               # Routes API
+│   ├── 🔐 authRoutes.js
+│   ├── 📊 budgetRoutes.js
+│   ├── 💳 transactionRoutes.js
+│   └── 📅 subscriptionsRoute.js
+│
+├── 📁 docs/
+│   └── 📘 swagger.yaml     # Documentation OpenAPI/Swagger
+│
+├── 🚀 server.js
+├── 📄 package.json
+└── 📖 README.md
+```
 
 ---
 
-## 🛠️ **Technologies Utilisées**
+## 🚀 **Fonctionnalités**
 
-### ⚙️ **Backend**
-| Technologie | Description |
-|--------------|--------------|
-| ![Node.js](https://img.shields.io/badge/-Node.js-339933?logo=node.js&logoColor=white) | Environnement d’exécution |
-| ![Express](https://img.shields.io/badge/-Express-000000?logo=express&logoColor=white) | Framework web |
-| ![PostgreSQL](https://img.shields.io/badge/-PostgreSQL-336791?logo=postgresql&logoColor=white) | Base de données |
-| ![JWT](https://img.shields.io/badge/-JWT-000000?logo=json-web-tokens&logoColor=white) | Authentification |
-| ![bcrypt](https://img.shields.io/badge/-bcrypt-000000) | Chiffrement des mots de passe |
+### 🔐 **Authentification & Sécurité**
+- Authentification **JWT** (expiration 15 jours)  
+- Middleware de **protection des routes**  
+- Validation robuste des données  
+- Génération automatique d'**avatars DiceBear**  
+- **Rate limiting** intelligent via Upstash Redis  
+- **Limitation des tentatives de connexion** (3/min)  
 
-### ☁️ **Services Externes**
-| Service | Rôle |
-|----------|------|
-| ![Cloudinary](https://img.shields.io/badge/-Cloudinary-3448C5?logo=cloudinary&logoColor=white) | Stockage d’images |
-| ![Upstash](https://img.shields.io/badge/-Upstash-00E9A3?logo=redis&logoColor=white) | Rate limiting / cache |
-| ![Neon](https://img.shields.io/badge/-Neon-00E9A3) | Base de données serverless |
+### 📊 **Budgets**
+- Création, suppression et consultation de budgets  
+- Catégorisation flexible (alimentation, transport…)  
+- Suivi en temps réel et pourcentages d'utilisation  
+- Détection des budgets atteints + résumés détaillés  
 
-### 🧩 **Sécurité & Performance**
-- 🔒 CORS  
-- ⚡ Rate limiting  
-- 📚 Swagger (documentation API)  
-- ⏰ Cron Jobs  
+### 💳 **Transactions**
+- Ajout / suppression de transactions par budget  
+- Historique filtré par catégorie  
+- Vérification automatique du solde disponible  
+- Résumé global (revenus, dépenses, solde)  
+
+### 📅 **Abonnements**
+- Création, consultation, suppression  
+- Gestion des récurrences (mensuelle, annuelle…)  
+- Système de notation (1 à 5 étoiles)  
+- Upload d'images via **Cloudinary**  
+- Résumé total des coûts d'abonnement  
+
+### 🛡️ **Sécurité Avancée**
+- **Arcjet Protection** (bots, attaques)  
+- **Rate limiting multicouche** (Upstash + middleware)  
+- **Token Bucket Algorithm**  
+- **bcrypt** pour hashage des mots de passe  
+- **JWT sécurisés** avec vérification d’expiration  
 
 ---
 
 ## 📋 **Prérequis**
 
-Avant de commencer, assurez-vous d’avoir installé :
-
-- ![Node.js](https://img.shields.io/badge/-Node.js-18%2B-339933)  
-- ![npm](https://img.shields.io/badge/-npm-8%2B-CB3837)  
-- ![PostgreSQL](https://img.shields.io/badge/-PostgreSQL-15%2B-336791)
+- [Node.js](https://nodejs.org) v18 ou supérieur  
+- [PostgreSQL Neon](https://neon.tech)  
+- [Cloudinary](https://cloudinary.com)  
+- [Arcjet](https://arcjet.com)  
+- [Upstash Redis](https://upstash.com)  
 
 ---
 
-## 🚀 **Installation**
+## ⚙️ **Installation**
 
-### 1️⃣ Cloner le projet
+### 1️⃣ Cloner le dépôt
+
 ```bash
-git clone https://github.com/votre-username/budget-manager.git
-cd budget-manager
+git clone https://github.com/Maxime015/eTrack-Backend.git
+cd backend
 ```
 
 ### 2️⃣ Installer les dépendances
+
 ```bash
 npm install
 ```
 
-### 3️⃣ Configurer les variables d’environnement
-Créer un fichier `.env` à la racine du projet :
+### 3️⃣ Configurer les variables d'environnement
+
 ```bash
-# Base de données
-DATABASE_URL=votre_url_postgresql
+cp .env.example .env
+```
 
-# JWT
-JWT_SECRET=votre_secret_jwt
+**Exemple `.env`** :
 
-# Cloudinary
-CLOUDINARY_CLOUD_NAME=votre_cloud_name
-CLOUDINARY_API_KEY=votre_api_key
-CLOUDINARY_API_SECRET=votre_api_secret
-
-# Upstash Redis
-UPSTASH_REDIS_REST_URL=votre_url_redis
-UPSTASH_REDIS_REST_TOKEN=votre_token_redis
-
-# Configuration
+```bash
+# Server
 PORT=3000
 NODE_ENV=development
-API_URL=http://localhost:3000
+JWT_SECRET=super_secret
+
+# Database
+DATABASE_URL=<votre_url_postgresql_neon>
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=<nom>
+CLOUDINARY_API_KEY=<clé>
+CLOUDINARY_API_SECRET=<secret>
+
+# Security
+ARCJET_KEY=<clé_arcjet>
+UPSTASH_REDIS_REST_URL=<url>
+UPSTASH_REDIS_REST_TOKEN=<token>
+
+# Cron
+API_URL=https://votre-app.render.com
 ```
 
-### 4️⃣ Initialisation de la base de données
-> Les tables sont créées automatiquement au démarrage du serveur :
+### 4️⃣ Initialiser la base de données
 
-| Table | Description |
-|--------|--------------|
-| 👥 `users` | Gestion des utilisateurs |
-| 💰 `budgets` | Budgets utilisateur |
-| 💳 `transactions` | Transactions financières |
-| 🔔 `subscriptions` | Abonnements |
-| 🛒 `groceries` | Listes de courses |
-| 📝 `posts` | Publications sociales |
-| 💬 `comments` | Commentaires |
-| ❤️ `post_likes` | Likes |
-| 👥 `followers` | Relations entre utilisateurs |
-
-### 5️⃣ Démarrer l’application
-**Mode développement :**
 ```bash
+npm run db:init
+```
+
+### 5️⃣ Lancer le serveur
+
+```bash
+# Développement
 npm run dev
-```
 
-**Mode production :**
-```bash
+# Production
 npm start
 ```
-> L’application sera accessible sur : [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 📚 **Documentation API (Swagger)**
-Accessible via :  
-👉 [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+## 📚 **Documentation API**
 
-**Exemples de routes principales :**
-| Catégorie | Méthode | Route | Description |
-|------------|----------|--------|-------------|
-| Auth | `POST` | `/api/auth/register` | Créer un compte |
-| Auth | `POST` | `/api/auth/login` | Connexion |
-| Budgets | `GET` | `/api/budgets/summary` | Résumé des budgets |
-| Transactions | `GET` | `/api/transactions/summary` | Résumé financier |
+Swagger : 👉 [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+
+| Type | Endpoint | Description |
+|------|----------|-------------|
+| 📘 Docs | `/api-docs` | Interface Swagger |
+| ❤️ Health | `/health` | Vérifie l’état du serveur |
+| 🔐 Auth | `/api/auth/*` | Authentification |
+| 📊 Budgets | `/api/budgets/*` | Gestion budgets |
+| 💳 Transactions | `/api/transactions/*` | Gestion transactions |
+| 📅 Subscriptions | `/api/subscriptions/*` | Abonnements |
 
 ---
 
-## 🏗️ **Structure du Projet**
+## 🗂️ **Endpoints Principaux**
+
+### 🔐 Authentification
+
+| Méthode | Endpoint | Description | Auth |
+|---------|----------|-------------|------|
+| POST | `/api/auth/register` | Inscription | ❌ |
+| POST | `/api/auth/login` | Connexion | ❌ |
+| GET  | `/api/auth/profile-images` | Avatars dispo | ✅ |
+
+### 📊 Budgets
+
+| Méthode | Endpoint | Description | Auth |
+|---------|----------|-------------|------|
+| POST | `/api/budgets` | Créer un budget | ✅ |
+| DELETE | `/api/budgets/:budgetId` | Supprimer un budget | ✅ |
+| GET | `/api/budgets/all-summaries` | Résumé global | ✅ |
+| GET | `/api/budgets/reached` | Budgets atteints | ✅ |
+
+### 💳 Transactions
+
+| Méthode | Endpoint | Description | Auth |
+|---------|----------|-------------|------|
+| POST | `/api/transactions` | Ajouter une transaction | ✅ |
+| GET  | `/api/transactions/my-transactions` | Mes transactions | ✅ |
+| GET  | `/api/transactions/budget/:budgetId` | Transactions d’un budget | ✅ |
+| GET  | `/api/transactions/summary` | Résumé global | ✅ |
+| DELETE | `/api/transactions/:transactionId` | Supprimer une transaction | ✅ |
+
+### 📅 Abonnements
+
+| Méthode | Endpoint | Description | Auth |
+|---------|----------|-------------|------|
+| GET | `/api/subscriptions/:userId` | Lister abonnements | ✅ |
+| POST | `/api/subscriptions` | Créer un abonnement | ✅ |
+| DELETE | `/api/subscriptions/:id` | Supprimer un abonnement | ✅ |
+| GET | `/api/subscriptions/summary/:userId` | Résumé abonnements | ✅ |
+
+---
+
+## 🗃️ **Structure de la Base de Données**
+
+### 👥 Table `users`
+
+| Colonne | Type | Détails | Contraintes |
+|---------|------|---------|-------------|
+| id | SERIAL | Identifiant | PK |
+| username | VARCHAR(255) | Nom utilisateur | UNIQUE, NOT NULL |
+| email | VARCHAR(255) | Email | UNIQUE, NOT NULL |
+| password | VARCHAR(255) | Hashé bcrypt | NOT NULL |
+| profile_image | VARCHAR(255) | URL | DEFAULT DiceBear |
+| created_at | TIMESTAMPTZ | Date création | DEFAULT NOW() |
+| updated_at | TIMESTAMPTZ | Date modif | DEFAULT NOW() |
+
+(📊 Budgets / 💸 Transactions / 📅 Subscriptions suivent la même logique — voir documentation détaillée)
+
+---
+
+## 🛡️ **Sécurité**
+
+### 🔒 Arcjet Protection
+- **Shield Mode** : XSS, SQLi, CSRF  
+- **Bot Detection** (whitelist moteurs de recherche)  
+- **Token Bucket** : 10 requêtes / 10s  
+- **IP Tracking**
+
+### 🚦 Rate Limiting
+- Upstash Redis : 100 requêtes/min/IP  
+- 3 tentatives de login / min  
+- **Sliding Window Algorithm**
+
+### 🔐 Authentification
+- **JWT** (15 jours)  
+- **bcrypt** + salt 10  
+- Validation stricte des inputs
+
+---
+
+## ⚡ **Performance & Monitoring**
+
+### 🔄 Tâches Planifiées (Cron)
+```javascript
+"*/14 * * * *"  // Toutes les 14 minutes
 ```
-budget-manager/
-├── 📁 config/                # Configuration générale
-│   ├── db.js                # Connexion à PostgreSQL
-│   ├── cloudinary.js        # Service d’upload
-│   └── upstash.js           # Rate limiting
-├── 📁 controllers/           # Logique métier
-│   ├── authController.js
-│   ├── budgetController.js
-│   ├── transactionController.js
-│   └── ...
-├── 📁 middleware/            # Sécurité et validations
-│   ├── auth.middleware.js
-│   └── upload.middleware.js
-├── 📁 routes/                # Routes API
-├── 📁 docs/                  # Documentation Swagger
-└── server.js                 # Point d’entrée
+
+### 📊 Endpoint `/health`
+- Statut du serveur  
+- Timestamp  
+- Environnement  
+- Message  
+
+---
+
+## 🚀 **Déploiement**
+
+### 📦 Scripts
+
+```json
+{
+  "dev": "nodemon server.js",
+  "start": "node server.js",
+  "db:init": "node -e \"import('./config/db.js').then(m => m.initDB())\""
+}
 ```
 
+### 🌐 Variables Prod
+
+```bash
+NODE_ENV=production
+DATABASE_URL=<url_neon>
+ARCJET_KEY=<clé_arcjet_prod>
+JWT_SECRET=<secret_32_caractères>
+CLOUDINARY_CLOUD_NAME=<cloud_name_prod>
+```
+
+### ☁️ Services Externes
+- Neon (DB)
+- Cloudinary (images)
+- Arcjet (sécurité)
+- Upstash Redis (rate limiting)
+- Render/Vercel (hébergement + cron)
+
 ---
 
-## 💡 **Auteur & Contributions**
-👤 **Développeur principal :** [Votre Nom]  
-💌 Pour toute contribution, ouvrez une *pull request* ou créez une *issue*.
+## 🐛 **Dépannage**
+
+| Problème | Vérification |
+|----------|--------------|
+| Erreur DB | `DATABASE_URL` correcte |
+| JWT invalide | `JWT_SECRET` et expiration |
+| Rate limiting | Config Upstash/Arcjet |
+| Upload image | Credentials Cloudinary |
+
+Logs détaillés en dev + health checks pour monitoring.
 
 ---
 
-## 🧾 **Licence**
-Distribué sous licence MIT.  
-© 2025 - Budget Manager
+## 🤝 **Contribution**
+
+1. Fork le projet  
+2. Crée une branche feature  
+3. Commit → Push → Pull Request ✨
+
+---
+
+## 📄 **Licence**
+
+Projet sous licence **MIT**. Voir [LICENSE](./LICENSE).
+
+---
+
+## 📞 **Support**
+
+- 📘 **Docs** : `/api-docs`  
+- 🐛 **Issues** : GitHub  
+- 💬 **Contact** : Équipe dev
+
+---
+
+> 🧠 **Développé avec ❤️ pour une gestion financière intelligente et sécurisée**  
+> _“Une gestion financière transparente pour une vie sereine”_
