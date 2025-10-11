@@ -32,9 +32,6 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(rateLimiter);
 
-// Initialiser la base de données
-await initDB();
-
 // Route de documentation Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
   explorer: true,
@@ -82,23 +79,19 @@ app.use((error, req, res, next) => {
   });
 });
 
-const PORT = ENV.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`🚀 Serveur démarré sur le port ${PORT}`);
-  console.log(`📍 Environnement: ${ENV.NODE_ENV || 'development'}`);
-  console.log(`📚 Documentation API: http://localhost:${PORT}/api-docs`);
-  console.log(`❤️  Health Check: http://localhost:${PORT}/health`);
-});
-
 const startServer = async () => {
   try {
     await initDB();
 
-    // listen for local development
-    if (ENV.NODE_ENV !== "production") {
-      app.listen(ENV.PORT, () => console.log("Server is up and running on PORT:", ENV.PORT));
-    }
+    const PORT = ENV.PORT || 3000;
+    
+    app.listen(PORT, () => {
+      console.log(`🚀 Serveur démarré sur le port ${PORT}`);
+      console.log(`📍 Environnement: ${ENV.NODE_ENV || 'development'}`);
+      console.log(`📚 Documentation API: http://localhost:${PORT}/api-docs`);
+      console.log(`❤️  Health Check: http://localhost:${PORT}/health`);
+    });
+
   } catch (error) {
     console.error("Failed to start server:", error.message);
     process.exit(1);
