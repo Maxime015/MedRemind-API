@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: Budget Manager API
+  title: e-Track API
   description: API de gestion de budget, transactions et abonnements
   version: 1.0.0
   contact:
@@ -8,7 +8,7 @@ info:
     email: support@budgetmanager.com
 
 servers:
-  - url: http://localhost:3000/api
+  - url: http://localhost:5001/api
     description: Serveur de développement
   - url: https://votre-domaine.com/api
     description: Serveur de production
