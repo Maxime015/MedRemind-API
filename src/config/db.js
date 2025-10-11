@@ -63,7 +63,7 @@ export async function initDB() {
         recurrence VARCHAR(50) NOT NULL,
         rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
         image_url VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT subscriptions_user_id_fkey 
           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
       )`;
