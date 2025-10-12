@@ -11,7 +11,6 @@ Elle offre une solution **performante**, **sécurisée** et **extensible** pour 
 backend/
 ├── 📁 config/                # Configuration de l'application
 │   ├── 🗄️ db.js              # Base de données PostgreSQL (Neon)
-│   ├── 🔐 arcjet.js          # Sécurité Arcjet
 │   ├── ⚡ upstash.js         # Redis Upstash
 │   ├── ☁️ cloudinary.js     # Cloudinary
 │   ├── 🔧 env.js            # Variables d'environnement
@@ -25,8 +24,7 @@ backend/
 │
 ├── 📁 middleware/           # Middlewares personnalisés
 │   ├── 🛡️ auth.middleware.js
-│   ├── 🚦 rateLimiter.js
-│   └── 🧱 arcjet.middleware.js
+│   └── 🚦 rateLimiter.js
 │
 ├── 📁 routes/               # Routes API
 │   ├── 🔐 authRoutes.js
@@ -74,7 +72,6 @@ backend/
 - Résumé total des coûts d'abonnement  
 
 ### 🛡️ **Sécurité Avancée**
-- **Arcjet Protection** (bots, attaques)  
 - **Rate limiting multicouche** (Upstash + middleware)  
 - **Token Bucket Algorithm**  
 - **bcrypt** pour hashage des mots de passe  
@@ -87,7 +84,6 @@ backend/
 - [Node.js](https://nodejs.org) v18 ou supérieur  
 - [PostgreSQL Neon](https://neon.tech)  
 - [Cloudinary](https://cloudinary.com)  
-- [Arcjet](https://arcjet.com)  
 - [Upstash Redis](https://upstash.com)  
 
 ---
@@ -130,7 +126,6 @@ CLOUDINARY_API_KEY=<clé>
 CLOUDINARY_API_SECRET=<secret>
 
 # Security
-ARCJET_KEY=<clé_arcjet>
 UPSTASH_REDIS_REST_URL=<url>
 UPSTASH_REDIS_REST_TOKEN=<token>
 
@@ -231,12 +226,6 @@ Swagger : 👉 [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
 
 ## 🛡️ **Sécurité**
 
-### 🔒 Arcjet Protection
-- **Shield Mode** : XSS, SQLi, CSRF  
-- **Bot Detection** (whitelist moteurs de recherche)  
-- **Token Bucket** : 10 requêtes / 10s  
-- **IP Tracking**
-
 ### 🚦 Rate Limiting
 - Upstash Redis : 100 requêtes/min/IP  
 - 3 tentatives de login / min  
@@ -281,7 +270,6 @@ Swagger : 👉 [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
 ```bash
 NODE_ENV=production
 DATABASE_URL=<url_neon>
-ARCJET_KEY=<clé_arcjet_prod>
 JWT_SECRET=<secret_32_caractères>
 CLOUDINARY_CLOUD_NAME=<cloud_name_prod>
 ```
@@ -289,7 +277,6 @@ CLOUDINARY_CLOUD_NAME=<cloud_name_prod>
 ### ☁️ Services Externes
 - Neon (DB)
 - Cloudinary (images)
-- Arcjet (sécurité)
 - Upstash Redis (rate limiting)
 - Render/Vercel (hébergement + cron)
 
@@ -301,7 +288,7 @@ CLOUDINARY_CLOUD_NAME=<cloud_name_prod>
 |----------|--------------|
 | Erreur DB | `DATABASE_URL` correcte |
 | JWT invalide | `JWT_SECRET` et expiration |
-| Rate limiting | Config Upstash/Arcjet |
+| Rate limiting | Config Upstash |
 | Upload image | Credentials Cloudinary |
 
 Logs détaillés en dev + health checks pour monitoring.
