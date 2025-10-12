@@ -1,16 +1,30 @@
 import { aj } from "../config/arcjet.js";
+import requestIp from "request-ip";
 
+// 🛡️ Middleware Arcjet pour la sécurité, la détection de bots et la limitation de requêtes
 export const arcjetMiddleware = async (req, res, next) => {
   try {
-    // ✅ Protection Arcjet (rate limit, bot, sécurité)
-    // Arcjet détecte automatiquement l'IP
+    // ✅ Récupération de l’IP du client
+    const clientIp = requestIp.getClientIp(req) || "127.0.0.1";
+
+    if (!clientIp) {
+      console.warn("Impossible de déterminer l'IP du client, requête rejetée");
+      return res.status(400).json({
+        error: "Bad Request",
+        message: "Impossible de déterminer l'adresse IP du client.",
+      });
+    }
+
+    // ✅ Chaque requête consomme 1 jeton (pour la limitation de fréquence)
     const decision = await aj.protect(req, {
-      requested: 1,   // chaque requête consomme 1 jeton
+      requested: 1,
+      ip: clientIp, // Fournir explicitement l'IP client
     });
 
-    // ✅ Gestion des blocages Arcjet
+    // 🚫 Gérer les requêtes refusées par Arcjet
     if (decision.isDenied()) {
       if (decision.reason.isRateLimit()) {
+        // Trop de requêtes envoyées en peu de temps
         return res.status(429).json({
           error: "Trop de requêtes",
           message: "La limite de requêtes a été dépassée. Veuillez réessayer plus tard.",
@@ -18,28 +32,25 @@ export const arcjetMiddleware = async (req, res, next) => {
       }
 
       if (decision.reason.isBot()) {
+        // Accès bloqué pour les robots non autorisés
         return res.status(403).json({
           error: "Accès refusé au bot",
           message: "Les requêtes automatisées ne sont pas autorisées.",
         });
       }
 
+      // Autres blocages (politique de sécurité)
       return res.status(403).json({
         error: "Accès interdit",
         message: "Accès refusé par la politique de sécurité.",
       });
     }
 
-    // ✅ Continuer si la requête est autorisée
+    // ✅ Continuer la requête si tout est valide
     next();
-
   } catch (error) {
     console.error("Erreur du middleware Arcjet :", error);
-
-    // ✅ Fail-closed : on bloque si Arcjet est indisponible
-    return res.status(503).json({
-      error: "Service temporairement indisponible",
-      message: "Le service de sécurité est momentanément indisponible. Veuillez réessayer.",
-    });
+    // En cas d'erreur interne d'Arcjet, laisser la requête continuer
+    next();
   }
 };
