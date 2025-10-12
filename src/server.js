@@ -7,7 +7,7 @@ import YAML from 'yamljs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { ENV } from "./config/env.js";
-import { arcjetMiddleware } from "./middleware/arcjet.middleware.js";
+
 
 // Configuration Swagger
 const __filename = fileURLToPath(import.meta.url);
@@ -27,20 +27,13 @@ const app = express();
 
 if (ENV.NODE_ENV === "production") job.start();
 
-
-// 🔧 Configuration trust proxy pour les reverse proxies
-app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal']);
-
-// Ou plus spécifiquement pour Render.com :
-app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal', '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16']);
+// 🔧 CORRECTION : trust proxy DOIT être défini EN PREMIER
+app.set('trust proxy', true);
 
 // Middlewares
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(rateLimiter);
-
-// 🔧 Placer arcjetMiddleware APRÈS les middlewares de base
-app.use(arcjetMiddleware);
 
 
 // Route de documentation Swagger
