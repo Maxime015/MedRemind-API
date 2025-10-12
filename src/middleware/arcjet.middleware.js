@@ -3,25 +3,26 @@ import requestIp from "request-ip";
 
 export const arcjetMiddleware = async (req, res, next) => {
   try {
-    // ✅ 1) Récupération de l’IP du client
+    // ✅ 1) Récupération de l’IP SANS fallback
     const clientIp = requestIp.getClientIp(req);
 
-    // ✅ 2) Vérification stricte (fail-closed)
+    // ✅ 2) Vérification stricte de l’IP (fail-closed)
+    // Ici, on considère que ne pas connaître l’IP = violation de politique de sécurité.
     if (!clientIp) {
       console.warn("Impossible de déterminer l'IP du client, requête rejetée");
-      return res.status(400).json({
-        error: "Bad Request",
+      return res.status(403).json({
+        error: "Forbidden",
         message: "Impossible de déterminer l'adresse IP du client.",
       });
     }
 
-    // ✅ 3) Protection Arcjet (limitation, bot, sécurité)
+    // ✅ 3) Protection Arcjet (rate limit, bot, sécurité)
     const decision = await aj.protect(req, {
       requested: 1,   // chaque requête consomme 1 jeton
-      ip: clientIp,   // IP explicite
+      ip: clientIp,   // on fournit explicitement l'IP
     });
 
-    // ✅ 4) Décision Arcjet
+    // ✅ 4) Gestion des blocages Arcjet
     if (decision.isDenied()) {
       if (decision.reason.isRateLimit()) {
         return res.status(429).json({
@@ -43,18 +44,18 @@ export const arcjetMiddleware = async (req, res, next) => {
       });
     }
 
-    // ✅ 5) Continuer si tout est OK
+    // ✅ 5) Continuer si la requête est autorisée
     next();
+
   } catch (error) {
     console.error("Erreur du middleware Arcjet :", error);
 
-    // ✅ 6) Sécurité absolue : fail-closed (on BLOQUE)
+    // ✅ 6) Fail-closed : on bloque si Arcjet est indisponible
     return res.status(503).json({
       error: "Service temporairement indisponible",
       message: "Le service de sécurité est momentanément indisponible. Veuillez réessayer.",
     });
 
-    // 🔄 Alternative si tu préfères remonter l’erreur :
-    // next(error);
+
   }
 };
