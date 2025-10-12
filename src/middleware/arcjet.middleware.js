@@ -5,7 +5,7 @@ export const arcjetMiddleware = async (req, res, next) => {
   try {
     let clientIp = requestIp.getClientIp(req);
 
-    // Chaine de fallback améliorée
+    // Chaîne de fallback améliorée
     if (!clientIp || clientIp === '') {
       clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
                || req.headers['x-real-ip']
@@ -39,16 +39,27 @@ export const arcjetMiddleware = async (req, res, next) => {
                    clientIp === "::1" || 
                    clientIp.startsWith("10.") || 
                    clientIp.startsWith("192.168.") || 
-                   clientIp.startsWith("172.") ||
+                   (clientIp.startsWith("172.") && 
+                    parseInt(clientIp.split('.')[1]) >= 16 && 
+                    parseInt(clientIp.split('.')[1]) <= 31) ||
                    clientIp === "localhost";
 
     if (isLocal) {
+      console.log(`Arcjet : Requête locale ignorée depuis ${clientIp}`);
       return next();
     }
 
+    // 🔧 CORRECTION : Vérifier que l'IP n'est pas vide avant d'appeler Arcjet
+    if (!clientIp || clientIp.trim() === '') {
+      console.warn("Arcjet : IP vide détectée, utilisation du fallback");
+      clientIp = "127.0.0.1";
+    }
+
+    console.log(`Arcjet : Traitement de la requête depuis IP: ${clientIp}`);
+
     const decision = await aj.protect(req, {
       requested: 1,
-      ip: clientIp,
+      ip: clientIp, // 🔧 S'assurer que cette valeur n'est jamais vide
     });
 
     if (decision.isDenied()) {
@@ -73,14 +84,8 @@ export const arcjetMiddleware = async (req, res, next) => {
     next();
   } catch (error) {
     console.error("Erreur du middleware Arcjet :", error);
-    // En production, vous voudrez peut-être être plus conservateur
-    if (ENV.NODE_ENV === 'production') {
-      // Autoriser les requêtes à continuer mais logger l'erreur
-      console.error('Arcjet a échoué mais la requête continue');
-      next();
-    } else {
-      // En développement, vous voudrez peut-être voir l'erreur
-      next(error);
-    }
+    // En production, autoriser les requêtes à continuer mais logger l'erreur
+    console.error('Arcjet a échoué mais la requête continue');
+    next();
   }
 };
