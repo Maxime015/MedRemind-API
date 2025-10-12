@@ -32,6 +32,10 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(rateLimiter);
 
+// server.js — assurez-vous d'appeler ça AVANT le middleware arcjet
+app.set('trust proxy', true);
+
+
 // 🔧 CORRECTION : Placer arcjetMiddleware APRÈS les middlewares de base mais AVANT les routes
 app.use(arcjetMiddleware);
 

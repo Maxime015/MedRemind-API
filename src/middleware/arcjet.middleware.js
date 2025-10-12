@@ -1,56 +1,56 @@
+// arcjet.middleware.js — robust IP extraction + fallback
 import { aj } from "../config/arcjet.js";
 import requestIp from "request-ip";
 
-// 🛡️ Middleware Arcjet pour la sécurité, la détection de bots et la limitation de requêtes
 export const arcjetMiddleware = async (req, res, next) => {
   try {
-    // ✅ Récupération de l’IP du client
-    const clientIp = requestIp.getClientIp(req) || "127.0.0.1";
+    // Prefer x-forwarded-for (trust proxy must be enabled), puis d'autres sources
+    let clientIp = requestIp.getClientIp(req);
 
+    // try common fallbacks
     if (!clientIp) {
-      console.warn("Impossible de déterminer l'IP du client, requête rejetée");
-      return res.status(400).json({
-        error: "Bad Request",
-        message: "Impossible de déterminer l'adresse IP du client.",
-      });
+      clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
+               || req.connection?.remoteAddress
+               || req.socket?.remoteAddress
+               || req.ip;
     }
 
-    // ✅ Chaque requête consomme 1 jeton (pour la limitation de fréquence)
+    // Normalize IPv4 mapped addresses like ::ffff:127.0.0.1
+    if (clientIp && clientIp.startsWith("::ffff:")) {
+      clientIp = clientIp.replace("::ffff:", "");
+    }
+
+    // If still empty, use a safe fallback (must NOT be empty string)
+    if (!clientIp) {
+      clientIp = "127.0.0.1";
+      console.warn("Arcjet: client IP was missing — using fallback 127.0.0.1");
+    }
+
+    // Optionally skip Arcjet checks for local/internal requests (useful for health checks)
+    const isLocal = clientIp === "127.0.0.1" || clientIp === "::1" || clientIp.startsWith("10.") || clientIp.startsWith("192.168.") || clientIp.startsWith("172.");
+    if (isLocal) {
+      // If you prefer, skip aj.protect for local/internal requests to avoid noise
+      return next();
+    }
+
     const decision = await aj.protect(req, {
       requested: 1,
-      ip: clientIp, // Fournir explicitement l'IP client
+      ip: clientIp,
     });
 
-    // 🚫 Gérer les requêtes refusées par Arcjet
     if (decision.isDenied()) {
       if (decision.reason.isRateLimit()) {
-        // Trop de requêtes envoyées en peu de temps
-        return res.status(429).json({
-          error: "Trop de requêtes",
-          message: "La limite de requêtes a été dépassée. Veuillez réessayer plus tard.",
-        });
+        return res.status(429).json({ error: "Trop de requêtes", message: "La limite de requêtes a été dépassée." });
       }
-
       if (decision.reason.isBot()) {
-        // Accès bloqué pour les robots non autorisés
-        return res.status(403).json({
-          error: "Accès refusé au bot",
-          message: "Les requêtes automatisées ne sont pas autorisées.",
-        });
+        return res.status(403).json({ error: "Accès refusé au bot", message: "Les requêtes automatisées ne sont pas autorisées." });
       }
-
-      // Autres blocages (politique de sécurité)
-      return res.status(403).json({
-        error: "Accès interdit",
-        message: "Accès refusé par la politique de sécurité.",
-      });
+      return res.status(403).json({ error: "Accès interdit", message: "Accès refusé par la politique de sécurité." });
     }
 
-    // ✅ Continuer la requête si tout est valide
     next();
   } catch (error) {
     console.error("Erreur du middleware Arcjet :", error);
-    // En cas d'erreur interne d'Arcjet, laisser la requête continuer
-    next();
+    next(); // en doute, ne bloquez pas le service
   }
 };
