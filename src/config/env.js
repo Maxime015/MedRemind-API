@@ -12,4 +12,6 @@ export const ENV = {
   ARCJET_KEY: process.env.ARCJET_KEY,
   UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
   UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
+  JWT_SECRET: process.env.JWT_SECRET, 
+  API_URL: process.env.API_URL 
 };
