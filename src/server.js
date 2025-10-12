@@ -27,13 +27,13 @@ const app = express();
 
 if (ENV.NODE_ENV === "production") job.start();
 
+// 🔧 CORRECTION : trust proxy DOIT être défini EN PREMIER
+app.set('trust proxy', true);
+
 // Middlewares
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(rateLimiter);
-
-// server.js — assurez-vous d'appeler ça AVANT le middleware arcjet
-app.set('trust proxy', true);
 
 
 // 🔧 CORRECTION : Placer arcjetMiddleware APRÈS les middlewares de base mais AVANT les routes
