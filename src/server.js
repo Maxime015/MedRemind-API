@@ -17,7 +17,7 @@ const swaggerDocument = YAML.load(join(__dirname, './docs/swagger.yaml'));
 import authRoutes from './routes/authRoutes.js';
 import budgetRoutes from './routes/budgetRoutes.js';
 import transactionRoutes from './routes/transactionRoutes.js';
-import subscriptionsRoute from './routes/subscriptionsRoute.js';
+import subscriptionsRoute from './routes/subscriptionRoutes.js';
 
 import protectRoute from './middleware/auth.middleware.js';
 
@@ -31,6 +31,9 @@ if (ENV.NODE_ENV === "production") job.start();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(rateLimiter);
+
+// 🔧 CORRECTION : Placer arcjetMiddleware APRÈS les middlewares de base mais AVANT les routes
+app.use(arcjetMiddleware);
 
 // Route de documentation Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
@@ -53,13 +56,11 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.use(arcjetMiddleware);
-
 // Routes de l'API
 app.use('/api/auth', authRoutes);
 app.use('/api/budgets', protectRoute, budgetRoutes);
 app.use('/api/transactions', protectRoute, transactionRoutes);
-app.use('/api/subscriptions', subscriptionsRoute);
+app.use('/api/subscriptions', protectRoute, subscriptionsRoute);
 
 // Route 404 pour les routes non trouvées
 app.use('*', (req, res) => {

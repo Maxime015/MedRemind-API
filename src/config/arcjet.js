@@ -1,30 +1,33 @@
-import arcjet, { tokenBucket, shield, detectBot } from "@arcjet/node";
+import arcjet, { tokenBucket, shield, detectBot, ip } from "@arcjet/node";
 import { ENV } from "./env.js";
 
 // Initialisation de la sécurité Arcjet avec des règles de protection
 export const aj = arcjet({
   key: ENV.ARCJET_KEY,
-  characteristics: ["ip.src"], // Utilise l'adresse IP source pour l'identification
+  characteristics: [
+    // ✅ Déclaration explicite de la caractéristique IP
+    ip({ 
+      required: true, // Rendre l'IP obligatoire
+    })
+  ],
   rules: [
-    // 🛡️ "shield" protège l’application contre les attaques courantes 
-    // telles que les injections SQL, XSS ou CSRF
+    // 🛡️ "shield" protège l'application contre les attaques courantes 
     shield({ mode: "LIVE" }),
 
-    // 🤖 Détection des bots — bloque tous les robots sauf les moteurs de recherche autorisés
+    // 🤖 Détection des bots
     detectBot({
       mode: "LIVE",
       allow: [
-        "CATEGORY:SEARCH_ENGINE", // Autoriser uniquement les bots des moteurs de recherche légitimes
-        // Liste complète disponible sur : https://arcjet.com/bot-list
+        "CATEGORY:SEARCH_ENGINE",
       ],
     }),
 
-    // ⚡ Limitation du nombre de requêtes via l’algorithme "Token Bucket"
+    // ⚡ Limitation du nombre de requêtes
     tokenBucket({
       mode: "LIVE",
-      refillRate: 10, // Nombre de jetons ajoutés à chaque intervalle
-      interval: 10,   // Intervalle en secondes (ici toutes les 10 secondes)
-      capacity: 15,   // Nombre maximal de jetons dans le seau
+      refillRate: 10,
+      interval: 10,
+      capacity: 15,
     }),
   ],
 });

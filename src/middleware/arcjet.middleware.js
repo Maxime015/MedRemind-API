@@ -3,9 +3,21 @@ import { aj } from "../config/arcjet.js";
 // 🛡️ Middleware Arcjet pour la sécurité, la détection de bots et la limitation de requêtes
 export const arcjetMiddleware = async (req, res, next) => {
   try {
+    // Fonction helper pour extraire l'IP client (important derrière proxy)
+    const getClientIp = (request) => {
+      return request.headers['x-forwarded-for']?.split(',')[0]?.trim() || 
+             request.headers['x-real-ip'] || 
+             request.connection?.remoteAddress || 
+             request.socket?.remoteAddress ||
+             '127.0.0.1'; // Fallback pour éviter les erreurs
+    };
+
+    const clientIp = getClientIp(req);
+
     // Chaque requête consomme 1 jeton (pour la limitation de fréquence)
     const decision = await aj.protect(req, {
       requested: 1,
+      ip: clientIp, // ✅ Fournir explicitement l'IP client
     });
 
     // 🚫 Gérer les requêtes refusées par Arcjet
@@ -31,19 +43,12 @@ export const arcjetMiddleware = async (req, res, next) => {
       }
     }
 
-    // 🤖 Détection des bots usurpés (faux bots imitant des moteurs de recherche)
-    if (decision.results.some((result) => result.reason.isBot() && result.reason.isSpoofed())) {
-      return res.status(403).json({
-        error: "Bot usurpé détecté",
-        message: "Activité suspecte détectée (bot malveillant).",
-      });
-    }
-
     // ✅ Continuer la requête si tout est valide
     next();
   } catch (error) {
     console.error("Erreur du middleware Arcjet :", error);
-    // En cas d’erreur interne d’Arcjet, laisser la requête continuer
+    // En cas d'erreur interne d'Arcjet, laisser la requête continuer
+    // mais logger l'erreur pour investigation
     next();
   }
 };

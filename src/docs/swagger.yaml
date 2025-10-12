@@ -397,21 +397,14 @@ paths:
           description: "Erreur interne du serveur"
 
   # =========================================
-  # ROUTES D'ABONNEMENTS
+  # ROUTES D'ABONNEMENTS - CORRIGÉES
   # =========================================
-  /subscriptions/{userId}:
+  /subscriptions:
     get:
-      summary: "Récupération des abonnements d'un utilisateur"
+      summary: "Récupération des abonnements de l'utilisateur connecté"
       tags: [Subscriptions]
       security:
         - bearerAuth: []
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 1
       responses:
         200:
           description: "Abonnements récupérés avec succès"
@@ -424,7 +417,6 @@ paths:
         500:
           description: "Erreur interne du serveur"
 
-  /subscriptions:
     post:
       summary: "Création d'un nouvel abonnement"
       tags: [Subscriptions]
@@ -505,19 +497,12 @@ paths:
         500:
           description: "Erreur interne du serveur"
 
-  /subscriptions/summary/{userId}:
+  /subscriptions/summary:
     get:
-      summary: "Récupération du résumé des abonnements"
+      summary: "Récupération du résumé des abonnements de l'utilisateur connecté"
       tags: [Subscriptions]
       security:
         - bearerAuth: []
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 1
       responses:
         200:
           description: "Résumé récupéré avec succès"
