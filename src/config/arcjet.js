@@ -1,14 +1,12 @@
-import arcjet, { tokenBucket, shield, detectBot, ip } from "@arcjet/node";
+import arcjet, { tokenBucket, shield, detectBot } from "@arcjet/node";
 import { ENV } from "./env.js";
 
 // Initialisation de la sécurité Arcjet avec des règles de protection
 export const aj = arcjet({
   key: ENV.ARCJET_KEY,
   characteristics: [
-    // ✅ Déclaration explicite de la caractéristique IP
-    ip({ 
-      required: true, // Rendre l'IP obligatoire
-    })
+    // ✅ Caractéristique IP (ne nécessite plus d'import séparé)
+    // Arcjet détecte automatiquement l'IP
   ],
   rules: [
     // 🛡️ "shield" protège l'application contre les attaques courantes 
