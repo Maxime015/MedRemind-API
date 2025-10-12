@@ -4,10 +4,7 @@ import { ENV } from "./env.js";
 // Initialisation de la sécurité Arcjet avec des règles de protection
 export const aj = arcjet({
   key: ENV.ARCJET_KEY,
-  characteristics: [
-    // ❌ SUPPRIMÉ : La caractéristique IP n'existe pas dans @arcjet/node
-    // Arcjet détecte automatiquement l'IP sans configuration explicite
-  ],
+  characteristics: ["ip"], // ✅ AJOUT: Caractéristique IP requise
   rules: [
     // 🛡️ "shield" protège l'application contre les attaques courantes 
     shield({ mode: "LIVE" }),
