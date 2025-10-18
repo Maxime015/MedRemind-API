@@ -12,6 +12,5 @@ const router = express.Router();
 // Routes publiques
 router.post("/register", register);
 router.post("/login", login);
-router.get("/profile-images", protectRoute, getAllProfileImages);
 
 export default router;

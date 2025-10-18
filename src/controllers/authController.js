@@ -120,24 +120,3 @@ export const login = async (req, res) => {
     res.status(500).json({ message: "Erreur interne du serveur." });
   }
 };
-
-// 🖼️ Récupération des images de profil des utilisateurs
-export const getAllProfileImages = async (req, res) => {
-  try {
-    // Récupérer uniquement les noms d'utilisateur et leurs images de profil
-    const users = await sql`
-      SELECT username, profile_image FROM users
-    `;
-
-    res.status(200).json({
-      message: "Images de profil récupérées avec succès.",
-      users: users.map(user => ({
-        username: user.username,
-        profileImage: user.profile_image
-      }))
-    });
-  } catch (error) {
-    console.error("Erreur lors de la récupération des images de profil :", error);
-    res.status(500).json({ message: "Erreur interne du serveur." });
-  }
-};
