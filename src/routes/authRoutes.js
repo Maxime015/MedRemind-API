@@ -2,10 +2,7 @@ import express from "express";
 import { 
   register, 
   login, 
-  getAllProfileImages,
 } from "../controllers/authController.js";
-
-import protectRoute from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
