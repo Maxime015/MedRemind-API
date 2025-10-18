@@ -222,6 +222,7 @@ paths:
       summary: Vérification de l'état du serveur
       tags:
         - Health
+      security: []
       responses:
         '200':
           description: Serveur fonctionne correctement
@@ -535,7 +536,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: "Transaction deleted successfully"
+                    example: "Transaction supprimée avec succès"
         '400':
           description: ID de transaction invalide
         '401':
