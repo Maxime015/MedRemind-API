@@ -15,7 +15,6 @@ const __dirname = dirname(__filename);
 const swaggerDocument = YAML.load(join(__dirname, './docs/swagger.yaml'));
 
 import authRoutes from './routes/authRoutes.js';
-import budgetRoutes from './routes/budgetRoutes.js';
 import transactionRoutes from './routes/transactionRoutes.js';
 import subscriptionsRoute from './routes/subscriptionRoutes.js';
 
@@ -59,7 +58,6 @@ app.get('/health', (req, res) => {
 
 // Routes de l'API
 app.use('/api/auth', authRoutes);
-app.use('/api/budgets', protectRoute, budgetRoutes);
 app.use('/api/transactions', protectRoute, transactionRoutes);
 app.use('/api/subscriptions', protectRoute, subscriptionsRoute);
 

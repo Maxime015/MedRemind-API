@@ -21,34 +21,18 @@ export async function initDB() {
       )
     `;
 
-    // Table Budgets
-    await sql`
-      CREATE TABLE IF NOT EXISTS budgets (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL,
-        name VARCHAR(255) NOT NULL,
-        amount DECIMAL(10,2) NOT NULL,
-        category VARCHAR(255) NOT NULL,
-        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT budgets_user_id_fkey 
-          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
-      )
-    `;
 
     // Table Transactions
     await sql`
       CREATE TABLE IF NOT EXISTS transactions (
         id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL, 
-        budget_id INTEGER,
-        description TEXT NOT NULL,
-        amount DECIMAL(10,2) NOT NULL,
+        user_id VARCHAR(255) NOT NULL,
+        title  VARCHAR(255) NOT NULL,
+        amount  DECIMAL(10,2) NOT NULL,
         category VARCHAR(255) NOT NULL,
-        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        created_at DATE NOT NULL DEFAULT CURRENT_DATE,
         CONSTRAINT transactions_user_id_fkey 
-          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
-        CONSTRAINT transactions_budget_id_fkey 
-          FOREIGN KEY (budget_id) REFERENCES budgets(id) ON DELETE CASCADE ON UPDATE CASCADE
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
       )
     `;
 
