@@ -20,19 +20,23 @@ export async function createTransaction(req, res) {
     const { title, amount, category } = req.body;
     const userId = req.user.id; // Récupéré du middleware d'authentification
 
+    console.log("Creating transaction with data:", { title, amount, category, userId });
+
     if (!title || !category || amount === undefined) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
+    // Utilisation de 'description' comme nom de colonne (plus cohérent avec le schéma de table probable)
     const transaction = await sql`
-      INSERT INTO transactions(user_id, title, amount, category)
+      INSERT INTO transactions(user_id, description, amount, category)
       VALUES (${userId}, ${title}, ${amount}, ${category})
       RETURNING *
     `;
 
+    console.log("Transaction created successfully:", transaction[0]);
     res.status(201).json(transaction[0]);
   } catch (error) {
-    console.log("Error creating the transaction", error);
+    console.log("Error creating the transaction:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 }
@@ -82,9 +86,9 @@ export async function getSummaryByUserId(req, res) {
     `;
 
     res.status(200).json({
-      balance: balanceResult[0].balance,
-      income: incomeResult[0].income,
-      expenses: expensesResult[0].expenses,
+      balance: parseFloat(balanceResult[0].balance),
+      income: parseFloat(incomeResult[0].income),
+      expenses: parseFloat(expensesResult[0].expenses),
     });
   } catch (error) {
     console.log("Error getting the summary", error);
