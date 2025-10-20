@@ -7,10 +7,13 @@ export const sql = neon(process.env.DATABASE_URL);
 
 export async function initDB() {
   try {
+    // Extension pour UUID (nécessaire pour PostgreSQL)
+    await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
     // Table Users
     await sql`
       CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         username VARCHAR(255) NOT NULL UNIQUE,
         email VARCHAR(255) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
@@ -20,14 +23,13 @@ export async function initDB() {
       )
     `;
 
-
     // Table Transactions
     await sql`
       CREATE TABLE IF NOT EXISTS transactions (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL,
-        title  VARCHAR(255) NOT NULL,
-        amount  DECIMAL(10,2) NOT NULL,
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        user_id UUID NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        amount DECIMAL(10,2) NOT NULL,
         category VARCHAR(255) NOT NULL,
         created_at DATE NOT NULL DEFAULT CURRENT_DATE,
         CONSTRAINT transactions_user_id_fkey 
@@ -38,8 +40,8 @@ export async function initDB() {
     // Table Subscriptions
     await sql`
       CREATE TABLE IF NOT EXISTS subscriptions (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL,
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        user_id UUID NOT NULL,
         label VARCHAR(255) NOT NULL,
         amount NUMERIC(10, 2) NOT NULL, 
         date DATE NOT NULL,

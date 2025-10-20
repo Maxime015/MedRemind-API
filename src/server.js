@@ -39,7 +39,7 @@ app.use(rateLimiter);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
   explorer: true,
   customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: "e-Track API Documentation",
+  customSiteTitle: "MyWallet API Documentation",
   swaggerOptions: {
     persistAuthorization: true,
     displayRequestDuration: true,
