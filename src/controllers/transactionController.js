@@ -26,9 +26,8 @@ export async function createTransaction(req, res) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // Utilisation de 'description' comme nom de colonne (plus cohérent avec le schéma de table probable)
     const transaction = await sql`
-      INSERT INTO transactions(user_id, description, amount, category)
+      INSERT INTO transactions(user_id, title, amount, category)
       VALUES (${userId}, ${title}, ${amount}, ${category})
       RETURNING *
     `;
