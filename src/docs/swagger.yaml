@@ -1,19 +1,18 @@
 openapi: 3.0.3
 info:
-  title: e-Track API
+  title: MyWallet API
   description: |
-    API de gestion financière pour suivre les transactions et abonnements.
-    - **Authentification** : Toutes les routes (sauf /auth) nécessitent un token JWT dans le header Authorization
-    - **Rate Limiting** : Toutes les routes sont soumises à une limitation de requêtes
+    API complète pour l'application MyWallet - Gestion des finances personnelles
+    Cette API permet de gérer les utilisateurs, les transactions et les abonnements.
   version: 1.0.0
   contact:
-    name: Support API
-    email: support@etrack.com
+    name: Support MyWallet
+    email: support@mywallet.com
 
 servers:
   - url: http://localhost:3000/api
     description: Serveur de développement
-  - url: https://votre-domaine.com/api
+  - url: https://mywallet-backend-myve.onrender.com/api
     description: Serveur de production
 
 components:
@@ -28,8 +27,9 @@ components:
       type: object
       properties:
         id:
-          type: integer
-          example: 1
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
         username:
           type: string
           example: "johndoe"
@@ -44,19 +44,23 @@ components:
           type: string
           format: date-time
           example: "2024-01-15T10:30:00Z"
-    
+      required:
+        - id
+        - username
+        - email
+
     AuthResponse:
       type: object
       properties:
         message:
           type: string
-          example: "Utilisateur créé avec succès."
+          example: "Utilisateur créé avec succès"
         token:
           type: string
           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
         user:
           $ref: '#/components/schemas/User'
-    
+
     Error:
       type: object
       properties:
@@ -67,17 +71,47 @@ components:
           type: array
           items:
             type: string
-          example: ["Le libellé est requis", "Le montant doit être un nombre positif"]
-    
+          example: ["Le libellé est requis", "Format de date invalide"]
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        user_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          example: "Salaire"
+        amount:
+          type: number
+          format: float
+          example: 1500.50
+        category:
+          type: string
+          example: "Revenu"
+        created_at:
+          type: string
+          format: date
+          example: "2024-01-15"
+      required:
+        - title
+        - amount
+        - category
+
     Subscription:
       type: object
       properties:
         id:
-          type: integer
-          example: 1
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
         user_id:
-          type: integer
-          example: 1
+          type: string
+          format: uuid
         label:
           type: string
           example: "Netflix"
@@ -101,52 +135,37 @@ components:
         image_url:
           type: string
           nullable: true
-          example: "https://res.cloudinary.com/.../image.jpg"
+          example: "https://res.cloudinary.com/.../netflix.jpg"
         created_at:
           type: string
           format: date-time
           example: "2024-01-15T10:30:00Z"
-    
-    SubscriptionCreate:
-      type: object
       required:
         - label
         - amount
         - date
         - recurrence
         - rating
+
+    TransactionSummary:
+      type: object
       properties:
-        label:
-          type: string
-          example: "Netflix"
-        amount:
+        balance:
           type: number
           format: float
-          example: 12.99
-        date:
-          type: string
-          format: date
-          example: "2024-01-15"
-        recurrence:
-          type: string
-          enum: [monthly, yearly, weekly]
-          example: "monthly"
-        rating:
-          type: integer
-          minimum: 1
-          maximum: 5
-          example: 4
-        image:
-          type: string
-          description: "Image en base64 (optionnelle)"
-          example: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ..."
-    
+          example: 1500.50
+        income:
+          type: number
+          format: float
+          example: 2000.00
+        expenses:
+          type: number
+          format: float
+          example: -499.50
+
     SubscriptionSummary:
       type: object
       properties:
-        message:
-          type: string
-          example: "Récupération du résumé réussie"
         total:
           type: number
           format: float
@@ -154,78 +173,35 @@ components:
         count:
           type: integer
           example: 3
-    
-    Transaction:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 1
-        user_id:
-          type: integer
-          example: 1
-        title:
-          type: string
-          example: "Salaire"
-        amount:
-          type: number
-          format: float
-          example: 2500.00
-        category:
-          type: string
-          example: "Revenu"
-        created_at:
-          type: string
-          format: date-time
-          example: "2024-01-15T10:30:00Z"
-    
-    TransactionCreate:
-      type: object
-      required:
-        - title
-        - amount
-        - category
-      properties:
-        title:
-          type: string
-          example: "Salaire"
-        amount:
-          type: number
-          format: float
-          example: 2500.00
-        category:
-          type: string
-          example: "Revenu"
-    
-    TransactionSummary:
-      type: object
-      properties:
-        balance:
-          type: number
-          format: float
-          example: 1500.00
-        income:
-          type: number
-          format: float
-          example: 2500.00
-        expenses:
-          type: number
-          format: float
-          example: -1000.00
 
-security:
-  - bearerAuth: []
+  parameters:
+    SubscriptionId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: ID de l'abonnement
+    TransactionId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: ID de la transaction
 
 paths:
   /health:
     get:
       summary: Vérification de l'état du serveur
+      description: Endpoint de santé pour vérifier que l'API fonctionne correctement
       tags:
-        - Health
-      security: []
+        - Santé
       responses:
         '200':
-          description: Serveur fonctionne correctement
+          description: Serveur fonctionne normalement
           content:
             application/json:
               schema:
@@ -247,31 +223,32 @@ paths:
   /auth/register:
     post:
       summary: Inscription d'un nouvel utilisateur
+      description: Crée un nouveau compte utilisateur avec nom d'utilisateur, email et mot de passe
       tags:
-        - Authentication
+        - Authentification
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - username
-                - email
-                - password
               properties:
                 username:
                   type: string
-                  minLength: 3
                   example: "johndoe"
+                  minLength: 3
                 email:
                   type: string
                   format: email
                   example: "john@example.com"
                 password:
                   type: string
-                  minLength: 6
                   example: "password123"
+                  minLength: 6
+              required:
+                - username
+                - email
+                - password
       responses:
         '201':
           description: Utilisateur créé avec succès
@@ -280,32 +257,26 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
         '400':
-          description: Données invalides ou utilisateur existe déjà
+          description: Données d'inscription invalides
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
         '500':
           description: Erreur interne du serveur
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
 
   /auth/login:
     post:
       summary: Connexion utilisateur
+      description: Authentifie un utilisateur avec son email et mot de passe
       tags:
-        - Authentication
+        - Authentification
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - email
-                - password
               properties:
                 email:
                   type: string
@@ -314,6 +285,9 @@ paths:
                 password:
                   type: string
                   example: "password123"
+              required:
+                - email
+                - password
       responses:
         '200':
           description: Connexion réussie
@@ -323,24 +297,133 @@ paths:
                 $ref: '#/components/schemas/AuthResponse'
         '400':
           description: Identifiants invalides
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
         '429':
           description: Trop de tentatives de connexion
         '500':
           description: Erreur interne du serveur
+
+  /transactions:
+    get:
+      summary: Récupère toutes les transactions de l'utilisateur
+      description: Retourne la liste de toutes les transactions de l'utilisateur authentifié
+      tags:
+        - Transactions
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Liste des transactions récupérée avec succès
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+        '401':
+          description: Non authentifié
+        '500':
+          description: Erreur interne du serveur
+
+    post:
+      summary: Crée une nouvelle transaction
+      description: Ajoute une nouvelle transaction pour l'utilisateur authentifié
+      tags:
+        - Transactions
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "Salaire"
+                amount:
+                  type: number
+                  format: float
+                  example: 1500.50
+                category:
+                  type: string
+                  example: "Revenu"
+              required:
+                - title
+                - amount
+                - category
+      responses:
+        '201':
+          description: Transaction créée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          description: Données de transaction invalides
+        '401':
+          description: Non authentifié
+        '500':
+          description: Erreur interne du serveur
+
+  /transactions/summary:
+    get:
+      summary: Récupère le résumé financier
+      description: Retourne le solde, les revenus et les dépenses de l'utilisateur
+      tags:
+        - Transactions
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Résumé récupéré avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionSummary'
+        '401':
+          description: Non authentifié
+        '500':
+          description: Erreur interne du serveur
+
+  /transactions/{id}:
+    delete:
+      summary: Supprime une transaction
+      description: Supprime une transaction spécifique de l'utilisateur authentifié
+      tags:
+        - Transactions
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      responses:
+        '200':
+          description: Transaction supprimée avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Transaction deleted successfully"
+        '400':
+          description: ID de transaction invalide
+        '401':
+          description: Non authentifié
+        '404':
+          description: Transaction non trouvée
+        '500':
+          description: Erreur interne du serveur
 
   /subscriptions:
     get:
-      summary: Récupérer tous les abonnements de l'utilisateur
+      summary: Récupère tous les abonnements de l'utilisateur
+      description: Retourne la liste de tous les abonnements de l'utilisateur authentifié
       tags:
-        - Subscriptions
+        - Abonnements
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Liste des abonnements récupérée avec succès
@@ -354,21 +437,51 @@ paths:
           description: Non authentifié
         '500':
           description: Erreur interne du serveur
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-    
+
     post:
-      summary: Créer un nouvel abonnement
+      summary: Crée un nouvel abonnement
+      description: Ajoute un nouvel abonnement pour l'utilisateur authentifié
       tags:
-        - Subscriptions
+        - Abonnements
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SubscriptionCreate'
+              type: object
+              properties:
+                label:
+                  type: string
+                  example: "Netflix"
+                amount:
+                  type: number
+                  format: float
+                  example: 12.99
+                date:
+                  type: string
+                  format: date
+                  example: "2024-01-15"
+                recurrence:
+                  type: string
+                  enum: [monthly, yearly, weekly]
+                  example: "monthly"
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  example: 4
+                image:
+                  type: string
+                  description: Image en base64 (optionnelle)
+                  example: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ..."
+              required:
+                - label
+                - amount
+                - date
+                - recurrence
+                - rating
       responses:
         '201':
           description: Abonnement créé avec succès
@@ -383,7 +496,7 @@ paths:
                   subscription:
                     $ref: '#/components/schemas/Subscription'
         '400':
-          description: Données de validation invalides
+          description: Données d'abonnement invalides
           content:
             application/json:
               schema:
@@ -392,24 +505,37 @@ paths:
           description: Non authentifié
         '500':
           description: Erreur interne du serveur
+
+  /subscriptions/summary:
+    get:
+      summary: Récupère le résumé des abonnements
+      description: Retourne le total des montants et le nombre d'abonnements de l'utilisateur
+      tags:
+        - Abonnements
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Résumé récupéré avec succès
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/SubscriptionSummary'
+        '401':
+          description: Non authentifié
+        '500':
+          description: Erreur interne du serveur
 
   /subscriptions/{id}:
     delete:
-      summary: Supprimer un abonnement
+      summary: Supprime un abonnement
+      description: Supprime un abonnement spécifique de l'utilisateur authentifié
       tags:
-        - Subscriptions
+        - Abonnements
+      security:
+        - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            minimum: 1
-          description: ID de l'abonnement à supprimer
+        - $ref: '#/components/parameters/SubscriptionId'
       responses:
         '200':
           description: Abonnement supprimé avec succès
@@ -422,8 +548,8 @@ paths:
                     type: string
                     example: "Abonnement supprimé avec succès"
                   deletedId:
-                    type: integer
-                    example: 1
+                    type: string
+                    format: uuid
         '400':
           description: ID d'abonnement invalide
         '401':
@@ -432,151 +558,13 @@ paths:
           description: Abonnement non trouvé
         '500':
           description: Erreur interne du serveur
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /subscriptions/summary:
-    get:
-      summary: Récupérer le résumé des abonnements
-      tags:
-        - Subscriptions
-      responses:
-        '200':
-          description: Résumé récupéré avec succès
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SubscriptionSummary'
-        '401':
-          description: Non authentifié
-        '500':
-          description: Erreur interne du serveur
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /transactions:
-    get:
-      summary: Récupérer toutes les transactions de l'utilisateur
-      tags:
-        - Transactions
-      responses:
-        '200':
-          description: Liste des transactions récupérée avec succès
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Transaction'
-        '401':
-          description: Non authentifié
-        '500':
-          description: Erreur interne du serveur
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-    
-    post:
-      summary: Créer une nouvelle transaction
-      tags:
-        - Transactions
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TransactionCreate'
-      responses:
-        '201':
-          description: Transaction créée avec succès
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Transaction'
-        '400':
-          description: Données invalides
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '401':
-          description: Non authentifié
-        '500':
-          description: Erreur interne du serveur
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /transactions/{id}:
-    delete:
-      summary: Supprimer une transaction
-      tags:
-        - Transactions
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            minimum: 1
-          description: ID de la transaction à supprimer
-      responses:
-        '200':
-          description: Transaction supprimée avec succès
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Transaction supprimée avec succès"
-        '400':
-          description: ID de transaction invalide
-        '401':
-          description: Non authentifié
-        '404':
-          description: Transaction non trouvée
-        '500':
-          description: Erreur interne du serveur
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /transactions/summary:
-    get:
-      summary: Récupérer le résumé financier
-      tags:
-        - Transactions
-      responses:
-        '200':
-          description: Résumé financier récupéré avec succès
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TransactionSummary'
-        '401':
-          description: Non authentifié
-        '500':
-          description: Erreur interne du serveur
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
 
 tags:
-  - name: Health
-    description: Endpoints de vérification de l'état du serveur
-  - name: Authentication
-    description: Endpoints d'authentification des utilisateurs
-  - name: Subscriptions
-    description: Gestion des abonnements
+  - name: Authentification
+    description: Opérations d'inscription et de connexion
   - name: Transactions
     description: Gestion des transactions financières
+  - name: Abonnements
+    description: Gestion des abonnements récurrents
+  - name: Santé
+    description: Endpoints de monitoring
