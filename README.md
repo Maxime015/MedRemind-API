@@ -149,15 +149,24 @@ npm install
 ### 3️⃣ Configurer les variables d’environnement
 Créer un fichier `.env` à la racine :
 ```env
-DATABASE_URL=postgresql://<user>:<password>@<neon-url>/<db-name>
-CLERK_SECRET_KEY=<votre_clerk_secret_key>
-EXPO_ACCESS_TOKEN=<votre_expo_access_token>
-PORT=5000
+# Serveur
+PORT=3000
+NODE_ENV=development
+
+# Base de données
+DATABASE_URL=votre_url_neon_postgresql
+
+# Clerk
+EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=your_expo_public_clerk_publishable_api_key
+
+# Rate Limiting (Upstash Redis)
+UPSTASH_REDIS_REST_URL=votre_url_redis
+UPSTASH_REDIS_REST_TOKEN=votre_token_redis
 ```
 
 ### 4️⃣ Lancer le serveur
 ```bash
-npm start
+npm run dev
 ```
 
 Le serveur sera accessible sur :  
@@ -167,7 +176,7 @@ Le serveur sera accessible sur :
 
 ## 🧠 Auteur
 
-👨‍💻 **Développé par :** Ton Nom ou Équipe  
+👨‍💻 **Développé par :** Maxime ANANIVI
 📅 **Année :** 2025  
 💡 Projet académique / personnel pour la gestion intelligente des traitements médicaux.
 
