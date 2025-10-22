@@ -1,216 +1,183 @@
-# 📊 MyWallet — API de Gestion Financière
+# 💊 MedRemind API
 
-**MyWallet** est une API RESTful conçue pour simplifier la gestion de vos finances personnelles.
-Elle permet de **suivre vos transactions**, **gérer vos abonnements récurrents** et **analyser votre situation financière** grâce à des résumés clairs et automatisés.
-
----
-
-## 🚀 Fonctionnalités
-
-### 🔐 Authentification Sécurisée
-
-* Inscription et connexion avec validation des données
-* Authentification via **JWT (JSON Web Tokens)**
-* Middleware de protection des routes
-* Limitation des tentatives de connexion *(anti-brute-force)*
-
-### 💰 Gestion des Transactions
-
-* ➕ Création de transactions (revenus / dépenses)
-* 📋 Liste complète des transactions
-* 🗑️ Suppression de transactions
-* 📊 Résumé financier : solde, revenus totaux, dépenses totales
-
-### 🗕️ Gestion des Abonnements
-
-* ➕ Ajout d’abonnements (Netflix, Spotify, etc.)
-* 👀 Consultation et suppression des abonnements
-* 🌟 Attribution d’une note (1 à 5 étoiles)
-* 🖼️ Téléversement d’images via **Cloudinary**
-* 📈 Résumé global : coût total et nombre d’abonnements
+API Express.js pour l’application **MedRemind**, une plateforme intelligente de gestion des médicaments et des rappels de prise.  
+Elle permet aux utilisateurs de suivre leurs traitements, recevoir des notifications push et gérer les réapprovisionnements de manière automatisée. 🚀
 
 ---
 
-## 🛠️ Technologies Utilisées
+## 🧱 Architecture du projet
 
-| Domaine           | Technologie                        |
-| ----------------- | ---------------------------------- |
-| Backend           | Node.js, Express.js                |
-| Base de données   | PostgreSQL (via **Neon**)          |
-| Authentification  | JWT                                |
-| Sécurité          | bcryptjs, CORS, validation serveur |
-| Stockage d’images | Cloudinary                         |
-| Documentation     | Swagger / OpenAPI                  |
-| Rate Limiting     | Upstash Redis                      |
-| Planification     | Cron Jobs                          |
+```
+📦 medremind-api
+ ┣ 📂 controllers/         # Logique métier (médicaments, rappels, etc.)
+ ┣ 📂 middleware/          # Middleware d’authentification (Clerk)
+ ┣ 📂 routes/              # Définition des routes API
+ ┣ 📂 utils/               # Outils (notifications, gestion des tokens, etc.)
+ ┣ 📜 db.js                # Configuration base de données (Neon)
+ ┣ 📜 cron.js              # Tâches planifiées (rappels et refills)
+ ┣ 📜 server.js            # Point d’entrée principal Express
+ ┗ 📜 package.json         # Dépendances et scripts
+```
 
 ---
 
-## ⚙️ Installation et Démarrage
+## ⚙️ Technologies utilisées
 
-### 🔧 Prérequis
+- **Node.js / Express.js** 🟢 — Framework backend rapide et minimaliste  
+- **PostgreSQL (Neon)** 🐘 — Base de données relationnelle scalable  
+- **Clerk** 🔐 — Authentification sécurisée et gestion des utilisateurs  
+- **Expo Server SDK** 🔔 — Envoi de notifications push  
+- **node-cron** ⏰ — Planification des rappels automatiques  
 
-* Node.js **v18+**
-* Compte **Neon PostgreSQL**
-* Compte **Cloudinary**
+---
 
-### 📦 Installation
+## 🔐 Authentification
 
+L’application utilise **Clerk** pour l’authentification des utilisateurs.  
+Chaque requête doit inclure un **token d’authentification** dans les en-têtes HTTP.
+
+Exemple d’en-tête :
+```http
+Authorization: Bearer <token_clerk>
+```
+
+Après vérification, Clerk fournit automatiquement le champ :
+```json
+{
+  "user_id": "user_123xyz"
+}
+```
+
+---
+
+## 🗃️ Base de données (Neon PostgreSQL)
+
+### 🧩 Tables principales
+
+#### 👤 `users`
+| Colonne | Type | Description |
+|----------|------|-------------|
+| id | SERIAL | Identifiant interne |
+| clerk_user_id | TEXT | ID fourni par Clerk |
+| email | TEXT | Adresse email |
+| created_at | TIMESTAMP | Date de création |
+| updated_at | TIMESTAMP | Dernière mise à jour |
+
+#### 💊 `medications`
+| Colonne | Type | Description |
+|----------|------|-------------|
+| id | SERIAL | Identifiant du médicament |
+| user_id | INTEGER | Référence à l’utilisateur |
+| name | TEXT | Nom du médicament |
+| dosage | TEXT | Dosage |
+| times | JSON | Horaires de prise |
+| start_date | DATE | Date de début |
+| duration | INTEGER | Durée du traitement |
+| color | TEXT | Couleur d’affichage |
+| reminder_enabled | BOOLEAN | Activation du rappel |
+| current_supply | INTEGER | Stock actuel |
+| total_supply | INTEGER | Stock total |
+| refill_at | INTEGER | Seuil de réapprovisionnement |
+| refill_reminder | BOOLEAN | Rappel de réapprovisionnement |
+| last_refill_date | DATE | Dernière recharge |
+| created_at | TIMESTAMP | Date de création |
+| updated_at | TIMESTAMP | Dernière mise à jour |
+
+#### 📅 `dose_history`
+| Colonne | Type | Description |
+|----------|------|-------------|
+| id | SERIAL | Identifiant de la dose |
+| user_id | INTEGER | Référence à l’utilisateur |
+| medication_id | INTEGER | Référence au médicament |
+| timestamp | TIMESTAMP | Heure de la dose |
+| taken | BOOLEAN | Prise effectuée ou manquée |
+| created_at | TIMESTAMP | Date d’enregistrement |
+
+---
+
+## 🛣️ Routes de l’API
+
+### 💊 Médicaments
+| Méthode | Endpoint | Description |
+|----------|-----------|-------------|
+| `GET` | `/medications` | Récupère tous les médicaments de l’utilisateur |
+| `POST` | `/medications` | Crée un nouveau médicament |
+| `PUT` | `/medications/:id` | Met à jour un médicament |
+| `DELETE` | `/medications/:id` | Supprime un médicament |
+
+### 📅 Historique des doses
+| Méthode | Endpoint | Description |
+|----------|-----------|-------------|
+| `GET` | `/dose-history` | Récupère l’historique des prises |
+| `POST` | `/dose-history` | Enregistre une dose (prise ou manquée) |
+
+### 🔁 Rappels de réapprovisionnement
+| Méthode | Endpoint | Description |
+|----------|-----------|-------------|
+| `GET` | `/refill-reminders` | Récupère les rappels de réapprovisionnement |
+| `POST` | `/refill-reminders` | Crée un rappel de refill |
+
+### 🔔 Notifications
+| Méthode | Endpoint | Description |
+|----------|-----------|-------------|
+| `POST` | `/notifications/register` | Enregistre un token Expo pour les notifications push |
+
+---
+
+## ⏰ Cron Jobs
+
+Les tâches planifiées sont définies dans `cron.js` :
+
+- 🔔 **Rappels quotidiens** — Notifications des médicaments à prendre  
+- 🔁 **Alertes de réapprovisionnement** — Alerte lorsque le stock devient faible  
+
+---
+
+## 🚀 Installation et exécution
+
+### 1️⃣ Cloner le projet
 ```bash
-git clone https://github.com/Maxime015/MyWallet-Backend.git backend
+git clone https://github.com/Maxime016/MedRemind-API.git backend
 cd backend
+```
+
+### 2️⃣ Installer les dépendances
+```bash
 npm install
 ```
 
-### 🧩 Configuration
-
+### 3️⃣ Configurer les variables d’environnement
 Créer un fichier `.env` à la racine :
-
 ```env
-# Serveur
-PORT=3000
-NODE_ENV=development
-
-# Base de données
-DATABASE_URL=votre_url_neon_postgresql
-
-# JWT
-JWT_SECRET=votre_secret_jwt
-
-# Cloudinary
-CLOUDINARY_CLOUD_NAME=votre_cloud_name
-CLOUDINARY_API_KEY=votre_api_key
-CLOUDINARY_API_SECRET=votre_api_secret
-
-# Rate Limiting (Upstash Redis)
-UPSTASH_REDIS_REST_URL=votre_url_redis
-UPSTASH_REDIS_REST_TOKEN=votre_token_redis
+DATABASE_URL=postgresql://<user>:<password>@<neon-url>/<db-name>
+CLERK_SECRET_KEY=<votre_clerk_secret_key>
+EXPO_ACCESS_TOKEN=<votre_expo_access_token>
+PORT=5000
 ```
 
-### 🚀 Lancer le serveur
-
+### 4️⃣ Lancer le serveur
 ```bash
-npm run dev
+npm start
 ```
 
-> 💡 La base de données est initialisée automatiquement au premier démarrage via `initDB()` dans `db.js`.
+Le serveur sera accessible sur :  
+👉 `http://localhost:5000`
 
 ---
 
-## 🗄️ Structure de la Base de Données
+## 🧠 Auteur
 
-### 👥 Table `users`
-
-| Champ         | Type         | Détails                             |
-| ------------- | ------------ | ----------------------------------- |
-| id            | UUID         | Clé primaire (`uuid_generate_v4()`) |
-| username      | VARCHAR(255) | Unique, requis                      |
-| email         | VARCHAR(255) | Unique, requis                      |
-| password      | VARCHAR(255) | Haché avec bcrypt                   |
-| profile_image | VARCHAR(255) | Défaut : chaîne vide                |
-| created_at    | TIMESTAMPTZ  | Défaut : `CURRENT_TIMESTAMP`        |
-| updated_at    | TIMESTAMPTZ  | Défaut : `CURRENT_TIMESTAMP`        |
+👨‍💻 **Développé par :** Ton Nom ou Équipe  
+📅 **Année :** 2025  
+💡 Projet académique / personnel pour la gestion intelligente des traitements médicaux.
 
 ---
 
-### 💰 Table `transactions`
+## 🩺 Licence
 
-| Champ       | Type                                     | Détails                             |
-| ----------- | ---------------------------------------- | ----------------------------------- |
-| id          | UUID                                     | Clé primaire (`uuid_generate_v4()`) |
-| user_id     | UUID                                     | Clé étrangère vers `users(id)`      |
-| title       | VARCHAR(255)                             | Requis                              |
-| amount      | DECIMAL(10,2)                            | Requis                              |
-| category    | VARCHAR(255)                             | Requis                              |
-| created_at  | DATE                                     | Défaut : `CURRENT_DATE`             |
-| Contraintes | `ON DELETE CASCADE`, `ON UPDATE CASCADE` |                                     |
+Ce projet est distribué sous licence **MIT**.  
+Vous êtes libre de l’utiliser, le modifier et le distribuer à condition de conserver la mention d’auteur.
 
 ---
 
-### 📅 Table `subscriptions`
-
-| Champ       | Type                                     | Détails                             |
-| ----------- | ---------------------------------------- | ----------------------------------- |
-| id          | UUID                                     | Clé primaire (`uuid_generate_v4()`) |
-| user_id     | UUID                                     | Clé étrangère vers `users(id)`      |
-| label       | VARCHAR(255)                             | Requis                              |
-| amount      | NUMERIC(10,2)                            | Requis                              |
-| date        | DATE                                     | Requis                              |
-| recurrence  | VARCHAR(50)                              | Requis                              |
-| rating      | INTEGER                                  | Doit être entre 1 et 5              |
-| image_url   | VARCHAR(255)                             | Optionnel                           |
-| created_at  | TIMESTAMP                                | Défaut : `CURRENT_TIMESTAMP`        |
-| Contraintes | `ON DELETE CASCADE`, `ON UPDATE CASCADE` |                                     |
-
----
-
-## 🔒 Sécurité Intégrée
-
-* Hachage des mots de passe avec **bcryptjs**
-* Vérification avec `comparePassword()`
-* Authentification **JWT**
-* Validation côté serveur
-* Protection **CORS**
-* Rate Limiting via **Redis**
-
----
-
-## 📚 Endpoints Principaux
-
-### 🔐 Authentification
-
-| Méthode | Endpoint             | Description             |
-| ------- | -------------------- | ----------------------- |
-| `POST`  | `/api/auth/register` | Inscription utilisateur |
-| `POST`  | `/api/auth/login`    | Connexion utilisateur   |
-
-### 💰 Transactions
-
-| Méthode  | Endpoint                | Description                   |
-| -------- | ----------------------- | ----------------------------- |
-| `GET`    | `/api/transactions`     | Liste des transactions        |
-| `POST`   | `/api/transactions`     | Création d’une transaction    |
-| `DELETE` | `/api/transactions/:id` | Suppression d’une transaction |
-
-### 📅 Abonnements
-
-| Méthode  | Endpoint                 | Description                 |
-| -------- | ------------------------ | --------------------------- |
-| `GET`    | `/api/subscriptions`     | Liste des abonnements       |
-| `POST`   | `/api/subscriptions`     | Création d’un abonnement    |
-| `DELETE` | `/api/subscriptions/:id` | Suppression d’un abonnement |
-
----
-
-## 🧠 Exemple d’utilisation
-
-### Inscription utilisateur
-
-```json
-POST /api/auth/register
-{
-  "username": "alex",
-  "email": "alex@example.com",
-  "password": "motdepasse123"
-}
-```
-
-### Ajout d’un abonnement
-
-```json
-POST /api/subscriptions
-{
-  "label": "Netflix",
-  "amount": 15.99,
-  "date": "2024-01-15",
-  "recurrence": "monthly",
-  "rating": 4,
-  "image_url": "https://..."
-}
-```
-
----
-
-## 📝 Licence
-
-Projet sous licence **MIT**.
+> _« La santé numérique, au service d’une meilleure observance thérapeutique. »_ 💙

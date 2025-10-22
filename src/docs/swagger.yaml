@@ -1,207 +1,215 @@
-openapi: 3.0.3
+openapi: 3.0.0
 info:
-  title: MyWallet API
-  description: |
-    API complète pour l'application MyWallet - Gestion des finances personnelles
-    Cette API permet de gérer les utilisateurs, les transactions et les abonnements.
+  title: MedRemind API
+  description: API de gestion des médicaments et rappels de prise
   version: 1.0.0
   contact:
-    name: Support MyWallet
-    email: support@mywallet.com
+    name: Support API
+    email: support@medremind.com
 
 servers:
   - url: http://localhost:3000/api
     description: Serveur de développement
-  - url: https://mywallet-backend-myve.onrender.com/api
+  - url: https://votre-domaine.com/api
     description: Serveur de production
 
 components:
   securitySchemes:
-    bearerAuth:
+    BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-  
+      description: Utilisez un token JWT de Clerk pour l'authentification
+
   schemas:
     User:
       type: object
       properties:
         id:
+          type: integer
+          example: 1
+        clerk_user_id:
           type: string
-          format: uuid
-          example: "123e4567-e89b-12d3-a456-426614174000"
-        username:
-          type: string
-          example: "johndoe"
+          example: "user_123456789"
         email:
           type: string
           format: email
-          example: "john@example.com"
-        profileImage:
+          example: "user@example.com"
+        expo_push_token:
           type: string
-          example: "https://api.dicebear.com/7.x/avataaars/svg?seed=johndoe"
-        createdAt:
+          nullable: true
+          example: "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]"
+        created_at:
           type: string
           format: date-time
-          example: "2024-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+
+    Medication:
+      type: object
       required:
-        - id
-        - username
-        - email
-
-    AuthResponse:
-      type: object
+        - name
+        - dosage
+        - times
+        - start_date
+        - duration
+        - color
       properties:
-        message:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        name:
           type: string
-          example: "Utilisateur créé avec succès"
-        token:
+          example: "Paracétamol"
+        dosage:
           type: string
-          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        user:
-          $ref: '#/components/schemas/User'
-
-    Error:
-      type: object
-      properties:
-        message:
-          type: string
-          example: "Erreur interne du serveur"
-        errors:
+          example: "500mg"
+        times:
           type: array
           items:
             type: string
-          example: ["Le libellé est requis", "Format de date invalide"]
-
-    Transaction:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: "123e4567-e89b-12d3-a456-426614174000"
-        user_id:
-          type: string
-          format: uuid
-        title:
-          type: string
-          example: "Salaire"
-        amount:
-          type: number
-          format: float
-          example: 1500.50
-        category:
-          type: string
-          example: "Revenu"
-        created_at:
+            example: "08:00"
+          example: ["08:00", "20:00"]
+        start_date:
           type: string
           format: date
           example: "2024-01-15"
-      required:
-        - title
-        - amount
-        - category
-
-    Subscription:
-      type: object
-      properties:
-        id:
+        duration:
           type: string
-          format: uuid
-          example: "123e4567-e89b-12d3-a456-426614174000"
-        user_id:
+          example: "30 days"
+        color:
           type: string
-          format: uuid
-        label:
-          type: string
-          example: "Netflix"
-        amount:
-          type: number
-          format: float
-          example: 12.99
-        date:
-          type: string
-          format: date
-          example: "2024-01-15"
-        recurrence:
-          type: string
-          enum: [monthly, yearly, weekly]
-          example: "monthly"
-        rating:
+          pattern: '^#[0-9A-Fa-f]{6}$'
+          example: "#3B82F6"
+        reminder_enabled:
+          type: boolean
+          default: true
+        current_supply:
           type: integer
-          minimum: 1
-          maximum: 5
-          example: 4
-        image_url:
+          default: 0
+          example: 20
+        total_supply:
+          type: integer
+          default: 0
+          example: 30
+        refill_at:
+          type: integer
+          default: 0
+          example: 5
+        refill_reminder:
+          type: boolean
+          default: false
+        last_refill_date:
           type: string
+          format: date
           nullable: true
-          example: "https://res.cloudinary.com/.../netflix.jpg"
         created_at:
           type: string
           format: date-time
-          example: "2024-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+
+    DoseHistory:
+      type: object
       required:
-        - label
-        - amount
-        - date
-        - recurrence
-        - rating
-
-    TransactionSummary:
-      type: object
+        - medication_id
+        - taken
+        - timestamp
       properties:
-        balance:
-          type: number
-          format: float
-          example: 1500.50
-        income:
-          type: number
-          format: float
-          example: 2000.00
-        expenses:
-          type: number
-          format: float
-          example: -499.50
-
-    SubscriptionSummary:
-      type: object
-      properties:
-        total:
-          type: number
-          format: float
-          example: 45.97
-        count:
+        id:
           type: integer
-          example: 3
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        medication_id:
+          type: integer
+          example: 1
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-15T08:00:00Z"
+        taken:
+          type: boolean
+          example: true
+        medication_name:
+          type: string
+          example: "Paracétamol"
+        dosage:
+          type: string
+          example: "500mg"
+        color:
+          type: string
+          example: "#3B82F6"
+        created_at:
+          type: string
+          format: date-time
 
-  parameters:
-    SubscriptionId:
-      name: id
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
-      description: ID de l'abonnement
-    TransactionId:
-      name: id
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
-      description: ID de la transaction
+    PushTokenRequest:
+      type: object
+      required:
+        - expoPushToken
+      properties:
+        expoPushToken:
+          type: string
+          example: "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]"
+
+    TestNotificationRequest:
+      type: object
+      required:
+        - medicationId
+      properties:
+        medicationId:
+          type: integer
+          example: 1
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Internal server error"
+
+  responses:
+    Unauthorized:
+      description: Non authentifié
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Ressource non trouvée
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ValidationError:
+      description: Données invalides
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+security:
+  - BearerAuth: []
 
 paths:
   /health:
     get:
-      summary: Vérification de l'état du serveur
-      description: Endpoint de santé pour vérifier que l'API fonctionne correctement
+      summary: Health check
+      description: Vérifie l'état du serveur
       tags:
-        - Santé
+        - System
       responses:
         '200':
-          description: Serveur fonctionne normalement
+          description: Serveur opérationnel
           content:
             application/json:
               schema:
@@ -210,241 +218,65 @@ paths:
                   status:
                     type: string
                     example: "OK"
-                  message:
-                    type: string
-                    example: "Serveur fonctionne"
                   timestamp:
                     type: string
                     format: date-time
-                  environment:
+                  service:
                     type: string
-                    example: "development"
+                    example: "MedRemind API"
 
-  /auth/register:
-    post:
-      summary: Inscription d'un nouvel utilisateur
-      description: Crée un nouveau compte utilisateur avec nom d'utilisateur, email et mot de passe
-      tags:
-        - Authentification
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                username:
-                  type: string
-                  example: "johndoe"
-                  minLength: 3
-                email:
-                  type: string
-                  format: email
-                  example: "john@example.com"
-                password:
-                  type: string
-                  example: "password123"
-                  minLength: 6
-              required:
-                - username
-                - email
-                - password
-      responses:
-        '201':
-          description: Utilisateur créé avec succès
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '400':
-          description: Données d'inscription invalides
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Erreur interne du serveur
-
-  /auth/login:
-    post:
-      summary: Connexion utilisateur
-      description: Authentifie un utilisateur avec son email et mot de passe
-      tags:
-        - Authentification
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  format: email
-                  example: "john@example.com"
-                password:
-                  type: string
-                  example: "password123"
-              required:
-                - email
-                - password
-      responses:
-        '200':
-          description: Connexion réussie
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '400':
-          description: Identifiants invalides
-        '429':
-          description: Trop de tentatives de connexion
-        '500':
-          description: Erreur interne du serveur
-
-  /transactions:
+  /medications:
     get:
-      summary: Récupère toutes les transactions de l'utilisateur
-      description: Retourne la liste de toutes les transactions de l'utilisateur authentifié
+      summary: Récupérer tous les médicaments de l'utilisateur
       tags:
-        - Transactions
-      security:
-        - bearerAuth: []
+        - Medications
       responses:
         '200':
-          description: Liste des transactions récupérée avec succès
+          description: Liste des médicaments récupérée avec succès
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Transaction'
-        '401':
-          description: Non authentifié
+                  $ref: '#/components/schemas/Medication'
         '500':
-          description: Erreur interne du serveur
+          $ref: '#/components/responses/InternalServerError'
 
     post:
-      summary: Crée une nouvelle transaction
-      description: Ajoute une nouvelle transaction pour l'utilisateur authentifié
+      summary: Créer un nouveau médicament
       tags:
-        - Transactions
-      security:
-        - bearerAuth: []
+        - Medications
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                title:
-                  type: string
-                  example: "Salaire"
-                amount:
-                  type: number
-                  format: float
-                  example: 1500.50
-                category:
-                  type: string
-                  example: "Revenu"
-              required:
-                - title
-                - amount
-                - category
+              $ref: '#/components/schemas/Medication'
       responses:
         '201':
-          description: Transaction créée avec succès
+          description: Médicament créé avec succès
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Transaction'
+                $ref: '#/components/schemas/Medication'
         '400':
-          description: Données de transaction invalides
-        '401':
-          description: Non authentifié
+          $ref: '#/components/responses/ValidationError'
         '500':
-          description: Erreur interne du serveur
+          $ref: '#/components/responses/InternalServerError'
 
-  /transactions/summary:
-    get:
-      summary: Récupère le résumé financier
-      description: Retourne le solde, les revenus et les dépenses de l'utilisateur
-      tags:
-        - Transactions
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Résumé récupéré avec succès
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TransactionSummary'
-        '401':
-          description: Non authentifié
-        '500':
-          description: Erreur interne du serveur
+  /medications/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: ID du médicament
 
-  /transactions/{id}:
-    delete:
-      summary: Supprime une transaction
-      description: Supprime une transaction spécifique de l'utilisateur authentifié
+    put:
+      summary: Mettre à jour un médicament
       tags:
-        - Transactions
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/TransactionId'
-      responses:
-        '200':
-          description: Transaction supprimée avec succès
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Transaction deleted successfully"
-        '400':
-          description: ID de transaction invalide
-        '401':
-          description: Non authentifié
-        '404':
-          description: Transaction non trouvée
-        '500':
-          description: Erreur interne du serveur
-
-  /subscriptions:
-    get:
-      summary: Récupère tous les abonnements de l'utilisateur
-      description: Retourne la liste de tous les abonnements de l'utilisateur authentifié
-      tags:
-        - Abonnements
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Liste des abonnements récupérée avec succès
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Subscription'
-        '401':
-          description: Non authentifié
-        '500':
-          description: Erreur interne du serveur
-
-    post:
-      summary: Crée un nouvel abonnement
-      description: Ajoute un nouvel abonnement pour l'utilisateur authentifié
-      tags:
-        - Abonnements
-      security:
-        - bearerAuth: []
+        - Medications
       requestBody:
         required: true
         content:
@@ -452,119 +284,207 @@ paths:
             schema:
               type: object
               properties:
-                label:
+                name:
                   type: string
-                  example: "Netflix"
-                amount:
-                  type: number
-                  format: float
-                  example: 12.99
-                date:
+                dosage:
+                  type: string
+                times:
+                  type: array
+                  items:
+                    type: string
+                start_date:
                   type: string
                   format: date
-                  example: "2024-01-15"
-                recurrence:
+                duration:
                   type: string
-                  enum: [monthly, yearly, weekly]
-                  example: "monthly"
-                rating:
+                color:
+                  type: string
+                reminder_enabled:
+                  type: boolean
+                current_supply:
                   type: integer
-                  minimum: 1
-                  maximum: 5
-                  example: 4
-                image:
+                total_supply:
+                  type: integer
+                refill_at:
+                  type: integer
+                refill_reminder:
+                  type: boolean
+                last_refill_date:
                   type: string
-                  description: Image en base64 (optionnelle)
-                  example: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ..."
+                  format: date
+      responses:
+        '200':
+          description: Médicament mis à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Medication'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      summary: Supprimer un médicament
+      tags:
+        - Medications
+      responses:
+        '200':
+          description: Médicament supprimé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Medication deleted successfully"
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /dose-history:
+    get:
+      summary: Récupérer l'historique des prises
+      tags:
+        - Dose History
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Date de début (format YYYY-MM-DD)
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Date de fin (format YYYY-MM-DD)
+        - name: medicationId
+          in: query
+          schema:
+            type: integer
+          description: Filtrer par ID de médicament
+      responses:
+        '200':
+          description: Historique récupéré avec succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DoseHistory'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      summary: Enregistrer une prise de médicament
+      tags:
+        - Dose History
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
               required:
-                - label
-                - amount
-                - date
-                - recurrence
-                - rating
+                - medicationId
+                - taken
+                - timestamp
+              properties:
+                medicationId:
+                  type: integer
+                  example: 1
+                taken:
+                  type: boolean
+                  example: true
+                timestamp:
+                  type: string
+                  format: date-time
+                  example: "2024-01-15T08:00:00Z"
       responses:
         '201':
-          description: Abonnement créé avec succès
+          description: Prise enregistrée avec succès
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Abonnement créé avec succès"
-                  subscription:
-                    $ref: '#/components/schemas/Subscription'
-        '400':
-          description: Données d'abonnement invalides
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '401':
-          description: Non authentifié
-        '500':
-          description: Erreur interne du serveur
-
-  /subscriptions/summary:
-    get:
-      summary: Récupère le résumé des abonnements
-      description: Retourne le total des montants et le nombre d'abonnements de l'utilisateur
-      tags:
-        - Abonnements
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Résumé récupéré avec succès
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SubscriptionSummary'
-        '401':
-          description: Non authentifié
-        '500':
-          description: Erreur interne du serveur
-
-  /subscriptions/{id}:
-    delete:
-      summary: Supprime un abonnement
-      description: Supprime un abonnement spécifique de l'utilisateur authentifié
-      tags:
-        - Abonnements
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/SubscriptionId'
-      responses:
-        '200':
-          description: Abonnement supprimé avec succès
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Abonnement supprimé avec succès"
-                  deletedId:
-                    type: string
-                    format: uuid
-        '400':
-          description: ID d'abonnement invalide
-        '401':
-          description: Non authentifié
+                $ref: '#/components/schemas/DoseHistory'
         '404':
-          description: Abonnement non trouvé
+          description: Médicament non trouvé
         '500':
-          description: Erreur interne du serveur
+          $ref: '#/components/responses/InternalServerError'
 
-tags:
-  - name: Authentification
-    description: Opérations d'inscription et de connexion
-  - name: Transactions
-    description: Gestion des transactions financières
-  - name: Abonnements
-    description: Gestion des abonnements récurrents
-  - name: Santé
-    description: Endpoints de monitoring
+  /dose-history/today:
+    get:
+      summary: Récupérer les prises du jour
+      tags:
+        - Dose History
+      responses:
+        '200':
+          description: Prises du jour récupérées avec succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DoseHistory'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /notifications/register-token:
+    post:
+      summary: Enregistrer un token Expo Push
+      tags:
+        - Notifications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushTokenRequest'
+      responses:
+        '200':
+          description: Token enregistré avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '400':
+          description: Token Expo requis
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /notifications/test:
+    post:
+      summary: Tester une notification
+      tags:
+        - Notifications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TestNotificationRequest'
+      responses:
+        '200':
+          description: Notification envoyée avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  ticket:
+                    type: object
+        '404':
+          description: Médicament non trouvé
+        '500':
+          $ref: '#/components/responses/InternalServerError'

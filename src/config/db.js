@@ -1,73 +1,75 @@
+// db.js
 import { neon } from "@neondatabase/serverless";
-import "dotenv/config";
-import bcrypt from "bcryptjs";
+import 'dotenv/config';
 
 // Connexion à la base de données
 export const sql = neon(process.env.DATABASE_URL);
 
 export async function initDB() {
   try {
-    // Extension pour UUID (nécessaire pour PostgreSQL)
-    await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
-
-    // Table Users
+    // Table des utilisateurs (liée à Clerk)
     await sql`
       CREATE TABLE IF NOT EXISTS users (
-        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-        username VARCHAR(255) NOT NULL UNIQUE,
-        email VARCHAR(255) NOT NULL UNIQUE,
-        password VARCHAR(255) NOT NULL,
-        profile_image VARCHAR(255) DEFAULT '',
-        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-      )
-    `;
-
-    // Table Transactions
-    await sql`
-      CREATE TABLE IF NOT EXISTS transactions (
-        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-        user_id UUID NOT NULL,
-        title VARCHAR(255) NOT NULL,
-        amount DECIMAL(10,2) NOT NULL,
-        category VARCHAR(255) NOT NULL,
-        created_at DATE NOT NULL DEFAULT CURRENT_DATE,
-        CONSTRAINT transactions_user_id_fkey 
-          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
-      )
-    `;
-
-    // Table Subscriptions
-    await sql`
-      CREATE TABLE IF NOT EXISTS subscriptions (
-        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-        user_id UUID NOT NULL,
-        label VARCHAR(255) NOT NULL,
-        amount NUMERIC(10, 2) NOT NULL, 
-        date DATE NOT NULL,
-        recurrence VARCHAR(50) NOT NULL,
-        rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
-        image_url VARCHAR(255),
+        id SERIAL PRIMARY KEY,
+        clerk_user_id VARCHAR(255) UNIQUE NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        expo_push_token TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT subscriptions_user_id_fkey 
-          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
-      )`;
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
 
-    console.log("✅ Base de données initialisée avec succès !");
-    
+    // Table des médicaments
+    await sql`
+      CREATE TABLE IF NOT EXISTS medications (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        name VARCHAR(255) NOT NULL,
+        dosage VARCHAR(100) NOT NULL,
+        times JSONB NOT NULL,
+        start_date DATE NOT NULL,
+        duration VARCHAR(50) NOT NULL,
+        color VARCHAR(7) NOT NULL,
+        reminder_enabled BOOLEAN DEFAULT true,
+        current_supply INTEGER DEFAULT 0,
+        total_supply INTEGER DEFAULT 0,
+        refill_at INTEGER DEFAULT 0,
+        refill_reminder BOOLEAN DEFAULT false,
+        last_refill_date DATE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    // Table de l'historique des prises
+    await sql`
+      CREATE TABLE IF NOT EXISTS dose_history (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        medication_id INTEGER REFERENCES medications(id) ON DELETE CASCADE,
+        timestamp TIMESTAMP NOT NULL,
+        taken BOOLEAN NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    // Table des notifications programmées
+    await sql`
+      CREATE TABLE IF NOT EXISTS scheduled_notifications (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        medication_id INTEGER REFERENCES medications(id) ON DELETE CASCADE,
+        notification_id VARCHAR(255) NOT NULL,
+        type VARCHAR(50) NOT NULL,
+        scheduled_time TIME,
+        repeats BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    console.log('Database tables created successfully');
   } catch (error) {
-    console.error("❌ Erreur lors de l'initialisation de la base :", error);
-    process.exit(1);
+    console.error('Error creating database tables:', error);
+    throw error;
   }
-}
-
-// Fonction pour hacher un mot de passe
-export async function hashPassword(password) {
-  const salt = await bcrypt.genSalt(10);
-  return await bcrypt.hash(password, salt);
-}
-
-// Fonction pour comparer les mots de passe
-export async function comparePassword(userPassword, hashedPassword) {
-  return await bcrypt.compare(userPassword, hashedPassword);
 }
