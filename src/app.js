@@ -1,16 +1,16 @@
-// app.js
+import 'dotenv/config';
 import express from 'express';
-import dotenv from 'dotenv';
+import cors from 'cors';
 import { initDB } from './config/db.js';
-import rateLimiter from './middleware/rateLimiter.js';
 import routes from './routes/index.js';
 import job from './config/cron.js';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { clerkMiddleware } from '@clerk/express';
+import rateLimiter from './middleware/rateLimiter.js';
 
-dotenv.config();
 
 const app = express();
 
@@ -21,20 +21,32 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const swaggerDocument = YAML.load(join(__dirname, './docs/swagger.yaml'));
 
-// middleware
-app.use(rateLimiter);
+const PORT = process.env.PORT || 3000;
+
+// Middleware
+app.use(cors());
 app.use(express.json());
+app.use(rateLimiter);
+app.use(clerkMiddleware())
 
 // Route de documentation Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-const PORT = process.env.PORT || 3000;
+// Routes
+app.use('/api', routes);
 
-app.get("/api/health", (req, res) => {
-  res.status(200).json({ status: "ok" });
+// Gestion des erreurs
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
 });
 
-app.use("/api", routes);
+// Route 404
+app.use('*', (req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// Démarrage du serveur
 
 initDB().then(() => {
   app.listen(PORT, () => {

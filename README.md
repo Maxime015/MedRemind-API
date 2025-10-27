@@ -1,192 +1,121 @@
-# 💊 MedRemind API
+# 💊 Medication Tracker - Backend API
 
-API Express.js pour l’application **MedRemind**, une plateforme intelligente de gestion des médicaments et des rappels de prise.  
-Elle permet aux utilisateurs de suivre leurs traitements, recevoir des notifications push et gérer les réapprovisionnements de manière automatisée. 🚀
+API RESTful pour le suivi des médicaments, rappels de prise, historique et statistiques d’observance thérapeutique.  
+Développée avec **Express.js**, **PostgreSQL (Neon)**, **Clerk** et **Upstash Redis**.
 
 ---
 
-## 🧱 Architecture du projet
+## ⚙️ Fonctionnalités principales
 
+- 🔐 **Auth sécurisée (Clerk)** — JWT, middleware de protection.  
+- 💊 **Gestion des médicaments** — ajout, modification, suppression, suivi du stock.  
+- ⏰ **Rappels intelligents** — notifications de prise et alertes de renouvellement.  
+- 📈 **Statistiques** — suivi des prises et taux d’observance.  
+- 🚀 **Optimisation** — tâches planifiées, rate limiting, documentation Swagger.
+
+---
+
+## 🛠️ Stack technique
+
+| Composant | Technologie |
+|------------|--------------|
+| Framework | Express.js |
+| Base de données | PostgreSQL (Neon) |
+| Authentification | Clerk |
+| Cache / Limites | Upstash Redis |
+| Documentation | Swagger |
+| Déploiement | Render |
+
+---
+
+## 📋 Prérequis
+
+- Node.js **v18+**  
+- Compte **Clerk**  
+- Base de données **Neon**  
+- (Optionnel) **Upstash Redis**
+
+---
+
+## 🚀 Installation rapide
+
+```bash
+# 1. Cloner le projet
+git clone <votre-repo>
+cd medication-tracker-backend
+
+# 2. Installer les dépendances
+npm install
 ```
-📦 medremind-api
- ┣ 📂 controllers/         # Logique métier (médicaments, rappels, etc.)
- ┣ 📂 middleware/          # Middleware d’authentification (Clerk)
- ┣ 📂 routes/              # Définition des routes API
- ┣ 📂 utils/               # Outils (notifications, gestion des tokens, etc.)
- ┣ 📜 db.js                # Configuration base de données (Neon)
- ┣ 📜 cron.js              # Tâches planifiées (rappels et refills)
- ┣ 📜 server.js            # Point d’entrée principal Express
- ┗ 📜 package.json         # Dépendances et scripts
+
+Créer un fichier `.env` :
+```env
+DATABASE_URL=postgresql://user:password@ep-example.neon.tech/dbname?sslmode=require
+CLERK_SECRET_KEY=sk_test_votre_cle
+PORT=3000
+```
+
+```bash
+# 3. Lancer le serveur
+npm run dev
 ```
 
 ---
 
-## ⚙️ Technologies utilisées
+## 🔗 Endpoints principaux
 
-- **Node.js / Express.js** 🟢 — Framework backend rapide et minimaliste  
-- **PostgreSQL (Neon)** 🐘 — Base de données relationnelle scalable  
-- **Clerk** 🔐 — Authentification sécurisée et gestion des utilisateurs  
-- **Expo Server SDK** 🔔 — Envoi de notifications push  
-- **node-cron** ⏰ — Planification des rappels automatiques  
+| Endpoint | Méthode | Description |
+|-----------|----------|-------------|
+| `/api/medications` | GET / POST / PUT / DELETE | Gérer les médicaments |
+| `/api/dose-history` | GET / POST | Historique des prises |
+| `/api/reminders/today` | GET | Médicaments du jour |
+| `/api/stats` | GET | Statistiques d’observance |
 
----
-
-## 🔐 Authentification
-
-L’application utilise **Clerk** pour l’authentification des utilisateurs.  
-Chaque requête doit inclure un **token d’authentification** dans les en-têtes HTTP.
-
-Exemple d’en-tête :
+**Auth requise :**
 ```http
 Authorization: Bearer <token_clerk>
 ```
 
-Après vérification, Clerk fournit automatiquement le champ :
-```json
-{
-  "user_id": "user_123xyz"
-}
+---
+
+## 📚 Documentation
+
+Swagger UI disponible sur :  
+👉 `http://localhost:3000/api-docs`
+
+---
+
+## 🧩 Structure du projet
+
+```
+backend/
+├── config/          # Configuration
+├── controllers/     # Logique métier
+├── middleware/      # Sécurité & validation
+├── routes/          # Routes API
+└── docs/            # Documentation Swagger
 ```
 
 ---
 
-## 🗃️ Base de données (Neon PostgreSQL)
+## 🐛 Dépannage rapide
 
-### 🧩 Tables principales
-
-#### 👤 `users`
-| Colonne | Type | Description |
-|----------|------|-------------|
-| id | SERIAL | Identifiant interne |
-| clerk_user_id | TEXT | ID fourni par Clerk |
-| email | TEXT | Adresse email |
-| created_at | TIMESTAMP | Date de création |
-| updated_at | TIMESTAMP | Dernière mise à jour |
-
-#### 💊 `medications`
-| Colonne | Type | Description |
-|----------|------|-------------|
-| id | SERIAL | Identifiant du médicament |
-| user_id | INTEGER | Référence à l’utilisateur |
-| name | TEXT | Nom du médicament |
-| dosage | TEXT | Dosage |
-| times | JSON | Horaires de prise |
-| start_date | DATE | Date de début |
-| duration | INTEGER | Durée du traitement |
-| color | TEXT | Couleur d’affichage |
-| reminder_enabled | BOOLEAN | Activation du rappel |
-| current_supply | INTEGER | Stock actuel |
-| total_supply | INTEGER | Stock total |
-| refill_at | INTEGER | Seuil de réapprovisionnement |
-| refill_reminder | BOOLEAN | Rappel de réapprovisionnement |
-| last_refill_date | DATE | Dernière recharge |
-| created_at | TIMESTAMP | Date de création |
-| updated_at | TIMESTAMP | Dernière mise à jour |
-
-#### 📅 `dose_history`
-| Colonne | Type | Description |
-|----------|------|-------------|
-| id | SERIAL | Identifiant de la dose |
-| user_id | INTEGER | Référence à l’utilisateur |
-| medication_id | INTEGER | Référence au médicament |
-| timestamp | TIMESTAMP | Heure de la dose |
-| taken | BOOLEAN | Prise effectuée ou manquée |
-| created_at | TIMESTAMP | Date d’enregistrement |
+| Problème | Solution |
+|-----------|-----------|
+| Erreur DB | Vérifier `DATABASE_URL` et l’état de Neon |
+| Auth invalide | Vérifier `CLERK_SECRET_KEY` |
+| Rate limit | Ajuster la config Upstash |
 
 ---
 
-## 🛣️ Routes de l’API
+## 🤝 Contribution
 
-### 💊 Médicaments
-| Méthode | Endpoint | Description |
-|----------|-----------|-------------|
-| `GET` | `/medications` | Récupère tous les médicaments de l’utilisateur |
-| `POST` | `/medications` | Crée un nouveau médicament |
-| `PUT` | `/medications/:id` | Met à jour un médicament |
-| `DELETE` | `/medications/:id` | Supprime un médicament |
-
-### 📅 Historique des doses
-| Méthode | Endpoint | Description |
-|----------|-----------|-------------|
-| `GET` | `/dose-history` | Récupère l’historique des prises |
-| `POST` | `/dose-history` | Enregistre une dose (prise ou manquée) |
-
-### 🔁 Rappels de réapprovisionnement
-| Méthode | Endpoint | Description |
-|----------|-----------|-------------|
-| `GET` | `/refill-reminders` | Récupère les rappels de réapprovisionnement |
-| `POST` | `/refill-reminders` | Crée un rappel de refill |
-
-### 🔔 Notifications
-| Méthode | Endpoint | Description |
-|----------|-----------|-------------|
-| `POST` | `/notifications/register` | Enregistre un token Expo pour les notifications push |
+Les contributions sont les bienvenues :  
+Fork → Branche → Commit → Pull Request 🚀
 
 ---
 
-## ⏰ Cron Jobs
+## 📄 Licence
 
-Les tâches planifiées sont définies dans `cron.js` :
-
-- 🔔 **Rappels quotidiens** — Notifications des médicaments à prendre  
-- 🔁 **Alertes de réapprovisionnement** — Alerte lorsque le stock devient faible  
-
----
-
-## 🚀 Installation et exécution
-
-### 1️⃣ Cloner le projet
-```bash
-git clone https://github.com/Maxime016/MedRemind-API.git backend
-cd backend
-```
-
-### 2️⃣ Installer les dépendances
-```bash
-npm install
-```
-
-### 3️⃣ Configurer les variables d’environnement
-Créer un fichier `.env` à la racine :
-```env
-# Serveur
-PORT=3000
-NODE_ENV=development
-
-# Base de données
-DATABASE_URL=votre_url_neon_postgresql
-
-# Clerk
-EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=your_expo_public_clerk_publishable_api_key
-
-# Rate Limiting (Upstash Redis)
-UPSTASH_REDIS_REST_URL=votre_url_redis
-UPSTASH_REDIS_REST_TOKEN=votre_token_redis
-```
-
-### 4️⃣ Lancer le serveur
-```bash
-npm run dev
-```
-
-Le serveur sera accessible sur :  
-👉 `http://localhost:5000`
-
----
-
-## 🧠 Auteur
-
-👨‍💻 **Développé par :** Maxime ANANIVI
-📅 **Année :** 2025  
-💡 Projet académique / personnel pour la gestion intelligente des traitements médicaux.
-
----
-
-## 🩺 Licence
-
-Ce projet est distribué sous licence **MIT**.  
-Vous êtes libre de l’utiliser, le modifier et le distribuer à condition de conserver la mention d’auteur.
-
----
-
-> _« La santé numérique, au service d’une meilleure observance thérapeutique. »_ 💙
+Projet sous licence **MIT**.  
+Développé avec ❤️ pour une meilleure observance thérapeutique.

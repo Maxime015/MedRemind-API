@@ -1,32 +1,31 @@
-// middleware/auth.js
-import { ClerkExpressRequireAuth } from '@clerk/clerk-sdk-node';
-import { sql } from '../config/db.js';
+import clerk from '@clerk/clerk-sdk-node';
 
-// Middleware Clerk pour vérifier l'authentification
-export const requireAuth = ClerkExpressRequireAuth();
-
-// Middleware pour récupérer l'utilisateur depuis la base de données
-export const getUserFromDb = async (req, res, next) => {
+export async function authMiddleware(req, res, next) {
   try {
-    const clerkUserId = req.auth.userId;
+    const sessionToken = req.headers.authorization?.replace('Bearer ', '');
     
-    if (!clerkUserId) {
-      return res.status(401).json({ error: 'User not authenticated' });
+    if (!sessionToken) {
+      return res.status(401).json({ error: 'Authentication required' });
     }
 
-    // Récupérer ou créer l'utilisateur dans notre base de données
-    const user = await sql`
-      INSERT INTO users (clerk_user_id, email) 
-      VALUES (${clerkUserId}, ${req.auth.sessionClaims?.email || ''}) 
-      ON CONFLICT (clerk_user_id) 
-      DO UPDATE SET updated_at = CURRENT_TIMESTAMP 
-      RETURNING *
-    `;
+    // Vérifier le token avec Clerk
+    const session = await clerk.sessions.verifySession(sessionToken, process.env.CLERK_SECRET_KEY);
+    const user = await clerk.users.getUser(session.userId);
+    
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid authentication token' });
+    }
 
-    req.user = user[0];
+    req.user = {
+      id: user.id,
+      email: user.primaryEmailAddress?.emailAddress,
+      firstName: user.firstName,
+      lastName: user.lastName
+    };
+
     next();
   } catch (error) {
-    console.error('Error in getUserFromDb:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Authentication error:', error);
+    return res.status(401).json({ error: 'Authentication failed' });
   }
-};
+}

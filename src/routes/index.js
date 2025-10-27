@@ -1,32 +1,39 @@
-// routes/index.js
 import express from 'express';
+import medicationsController from '../controllers/medicationsController.js';
+import doseHistoryController from '../controllers/doseHistoryController.js';
+import remindersController from '../controllers/remindersController.js';
+import { authMiddleware } from '../middleware/auth.js';
+
 const router = express.Router();
 
-// Import des contrôleurs
-import medicationController from '../controllers/medicationController.js';
-import doseHistoryController from '../controllers/doseHistoryController.js';
-import notificationController from '../controllers/notificationController.js';
-
-// Import du middleware d'authentification
-import { requireAuth, getUserFromDb } from '../middleware/auth.js';
-
-// Appliquer l'authentification à toutes les routes
-router.use(requireAuth);
-router.use(getUserFromDb);
+// Appliquer le middleware d'authentification à toutes les routes
+router.use(authMiddleware);
 
 // Routes des médicaments
-router.get('/medications', medicationController.getMedications);
-router.post('/medications', medicationController.createMedication);
-router.put('/medications/:id', medicationController.updateMedication);
-router.delete('/medications/:id', medicationController.deleteMedication);
+router.get('/medications', medicationsController.getMedications);
+router.post('/medications', medicationsController.createMedication);
+router.put('/medications/:id', medicationsController.updateMedication);
+router.delete('/medications/:id', medicationsController.deleteMedication);
+router.patch('/medications/:id/supply', medicationsController.updateSupply);
 
 // Routes de l'historique des prises
 router.get('/dose-history', doseHistoryController.getDoseHistory);
-router.post('/dose-history', doseHistoryController.recordDose);
 router.get('/dose-history/today', doseHistoryController.getTodaysDoses);
+router.post('/dose-history', doseHistoryController.recordDose);
+router.delete('/dose-history/medication/:medicationId', doseHistoryController.deleteMedicationHistory);
 
-// Routes des notifications
-router.post('/notifications/register-token', notificationController.registerPushToken);
-router.post('/notifications/test', notificationController.testNotification);
+// Routes des rappels
+router.get('/reminders/refill', remindersController.getRefillReminders);
+router.get('/reminders/today', remindersController.getTodaysMedications);
+router.get('/stats', remindersController.getMedicationStats);
+
+// Route de santé de l'API
+router.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    user: req.user.id 
+  });
+});
 
 export default router;
