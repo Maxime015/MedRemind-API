@@ -2,15 +2,15 @@ import clerk from '@clerk/clerk-sdk-node';
 
 export async function authMiddleware(req, res, next) {
   try {
-    const sessionToken = req.headers.authorization?.replace('Bearer ', '');
+    const token = req.headers.authorization?.replace('Bearer ', '');
     
-    if (!sessionToken) {
+    if (!token) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    // Vérifier le token avec Clerk
-    const session = await clerk.sessions.verifySession(sessionToken, process.env.CLERK_SECRET_KEY);
-    const user = await clerk.users.getUser(session.userId);
+    // Vérifier le token JWT avec Clerk
+    const decoded = await clerk.verifyToken(token);
+    const user = await clerk.users.getUser(decoded.sub);
     
     if (!user) {
       return res.status(401).json({ error: 'Invalid authentication token' });
