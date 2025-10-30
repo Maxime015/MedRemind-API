@@ -6,7 +6,7 @@ import "dotenv/config";
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
   // Augmenter les limites
-  limiter: Ratelimit.slidingWindow(500, "60 s"),
+  limiter: Ratelimit.slidingWindow(1000000, "60 s"),
   analytics: true,
   prefix: "medremind-api",
 });
