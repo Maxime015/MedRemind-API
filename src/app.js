@@ -30,6 +30,17 @@ app.use(rateLimiter);
 // Route de documentation Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+// Route de santé
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    message: 'Serveur fonctionne',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'production'
+  });
+});
+
+
 // Routes
 app.use('/api', routes);
 
