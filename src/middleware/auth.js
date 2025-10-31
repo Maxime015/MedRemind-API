@@ -1,5 +1,5 @@
 // middleware/auth.js
-import { createClerkClient } from "@clerk/backend";
+import { createClerkClient } from "@clerk/clerk-sdk-node";
 
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
@@ -13,7 +13,7 @@ export async function authMiddleware(req, res, next) {
 
     const token = authHeader.replace("Bearer ", "").trim();
 
-    // ✅ Vérification correcte via Clerk
+    // ✅ Vérification correcte du token Clerk
     const session = await clerk.verifyToken(token);
 
     if (!session || !session.sub) {
@@ -39,7 +39,7 @@ export async function authMiddleware(req, res, next) {
       method: req.method,
     });
 
-    return next();
+    next();
   } catch (error) {
     console.error("❌ Authentication error:", error.message);
 
