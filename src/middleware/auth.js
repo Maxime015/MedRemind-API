@@ -1,44 +1,56 @@
 // middleware/auth.js
-import { verifyToken } from '@clerk/backend';
+import { createClerkClient } from "@clerk/backend";
+
+const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
 export async function authMiddleware(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
-
     if (!authHeader) {
-      return res.status(401).json({ error: 'Authentication required' });
+      console.warn("⚠️ No Authorization header provided");
+      return res.status(401).json({ error: "Authentication required" });
     }
 
-    const token = authHeader.replace('Bearer ', '').trim();
+    const token = authHeader.replace("Bearer ", "").trim();
 
-    // Vérifie le token avec Clerk - version corrigée
-    const result = await verifyToken(token, {
-      secretKey: process.env.CLERK_SECRET_KEY,
-    });
+    // ✅ Vérification correcte via Clerk
+    const session = await clerk.verifyToken(token);
 
-    if (!result || !result.sub) {
-      return res.status(401).json({ error: 'Invalid authentication token' });
+    if (!session || !session.sub) {
+      console.warn("⚠️ Invalid or expired Clerk token");
+      return res.status(401).json({ error: "Invalid or expired token" });
     }
 
-    // Ajoute les infos utilisateur dans la requête
+    // ✅ Ajouter les infos utilisateur à la requête
     req.user = {
-      id: result.sub,
-      email: result.email,
-      firstName: result.first_name,
-      lastName: result.last_name,
+      id: session.sub,
+      email: session.email || session.email_address || null,
+      firstName: session.first_name || null,
+      lastName: session.last_name || null,
     };
 
-    next();
+    // ✅ Log utilisateur authentifié
+    console.log("✅ Authenticated user:", {
+      id: req.user.id,
+      email: req.user.email,
+      firstName: req.user.firstName,
+      lastName: req.user.lastName,
+      path: req.path,
+      method: req.method,
+    });
+
+    return next();
   } catch (error) {
-    console.error('Authentication error:', error.message);
-    
-    // Messages d'erreur plus spécifiques
-    if (error.message.includes('jwt expired')) {
-      return res.status(401).json({ error: 'Token expired' });
-    } else if (error.message.includes('invalid token')) {
-      return res.status(401).json({ error: 'Invalid token' });
+    console.error("❌ Authentication error:", error.message);
+
+    if (error.message.includes("jwt expired")) {
+      return res.status(401).json({ error: "Token expired" });
+    } else if (error.message.includes("invalid token")) {
+      return res.status(401).json({ error: "Invalid token" });
+    } else if (error.message.includes("missing")) {
+      return res.status(401).json({ error: "Missing authentication token" });
     }
-    
-    return res.status(401).json({ error: 'Authentication failed' });
+
+    return res.status(500).json({ error: "Authentication failed" });
   }
 }
