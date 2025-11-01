@@ -23,7 +23,6 @@ router.post('/dose-history', doseHistoryController.recordDose);
 router.delete('/dose-history/medication/:medicationId', doseHistoryController.deleteMedicationHistory);
 
 // Routes des rappels
-router.get('/reminders/refill', remindersController.getRefillReminders);
 router.get('/reminders/today', remindersController.getTodaysMedications);
 router.get('/stats', remindersController.getMedicationStats);
 

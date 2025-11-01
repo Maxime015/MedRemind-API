@@ -1,34 +1,6 @@
 import { sql } from '../config/db.js';
 
 export class RemindersController {
-  // Récupérer les médicaments nécessitant un rappel de renouvellement
-  async getRefillReminders(req, res) {
-    try {
-      const userId = req.user.id;
-
-      const reminders = await sql`
-        SELECT 
-          id,
-          name,
-          dosage,
-          current_supply as "currentSupply",
-          total_supply as "totalSupply",
-          refill_at as "refillAt",
-          last_refill_date as "lastRefillDate"
-        FROM medications 
-        WHERE user_id = ${userId} 
-          AND refill_reminder = true
-          AND current_supply <= refill_at
-        ORDER BY current_supply ASC
-      `;
-
-      res.json(reminders);
-    } catch (error) {
-      console.error('Error fetching refill reminders:', error);
-      res.status(500).json({ error: 'Failed to fetch refill reminders' });
-    }
-  }
-
   // Récupérer les médicaments pour aujourd'hui avec rappels
   async getTodaysMedications(req, res) {
     try {
