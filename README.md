@@ -28,6 +28,135 @@ Développée avec **Express.js**, **PostgreSQL (Neon)**, **Clerk** et **Upstash 
 
 ---
 
+## 🏗 Architecture du Système
+
+```mermaid
+graph TB
+    CLIENT[Client Frontend] -->|HTTPS| API[API Express.js]
+    
+    subgraph "Backend Services"
+        API --> MIDDLEWARE[Middleware]
+        MIDDLEWARE --> AUTH[Clerk Auth]
+        MIDDLEWARE --> RATE[Rate Limiting]
+        MIDDLEWARE --> ROUTES[Routes]
+        
+        ROUTES --> MED[Medications Controller]
+        ROUTES --> DOSE[Dose History Controller]
+        ROUTES --> REM[Reminders Controller]
+        
+        MED --> DB[(PostgreSQL)]
+        DOSE --> DB
+        REM --> DB
+    end
+    
+    subgraph "Background Jobs"
+        CRON[Cron Job] -->|Every 14min| HEALTH[Health Check]
+    end
+    
+    subgraph "External Services"
+        AUTH --> CLERK[Clerk Auth Service]
+        RATE --> UPSTASH[Upstash Redis]
+    end
+    
+    subgraph "Documentation"
+        API --> SWAGGER[Swagger UI]
+    end
+
+    style API fill:#4CAF50
+    style DB fill:#2196F3
+    style CLERK fill:#FF9800
+```
+
+---
+
+## 🔄 Flux de Données
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant A as API Gateway
+    participant M as Middleware
+    participant CT as Controller
+    participant DB as Database
+    participant EXT as External Services
+
+    C->>A: Requête HTTP
+    A->>M: Traitement middleware
+    M->>EXT: Vérification auth (Clerk)
+    EXT-->>M: Token validé
+    M->>EXT: Vérification rate limit (Upstash)
+    EXT-->>M: Requête autorisée
+    
+    alt Authentifié et autorisé
+        M->>CT: Routage vers controller
+        CT->>DB: Opération base de données
+        DB-->>CT: Résultats
+        CT-->>C: Réponse JSON
+    else Non authentifié
+        M-->>C: Erreur 401
+    else Rate limit dépassé
+        M-->>C: Erreur 429
+    end
+```
+
+---
+
+## 🔁 Flux Typique - Enregistrement d'une Prise
+
+```mermaid
+flowchart TD
+    START[User takes medication] --> RECORD[Record Dose API]
+    RECORD --> AUTH{Authentication}
+    AUTH -->|Success| VALID{Medication exists?}
+    AUTH -->|Fail| ERROR401[Error 401]
+    
+    VALID -->|Yes| INSERT[Insert dose history]
+    VALID -->|No| ERROR404[Error 404]
+    
+    INSERT --> UPDATE[Update medication supply]
+    UPDATE --> RESPONSE[Return dose record]
+    RESPONSE --> DONE[Operation complete]
+```
+
+---
+
+## ⚙️ Schéma de Base de Données
+
+```mermaid
+erDiagram
+    MEDICATIONS {
+        UUID id PK
+        TEXT user_id
+        VARCHAR name
+        VARCHAR dosage
+        TEXT[] times
+        DATE start_date
+        VARCHAR duration
+        VARCHAR color
+        BOOLEAN reminder_enabled
+        INTEGER current_supply
+        INTEGER total_supply
+        INTEGER refill_at
+        BOOLEAN refill_reminder
+        DATE last_refill_date
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+    
+    DOSE_HISTORY {
+        UUID id PK
+        TEXT user_id
+        UUID medication_id FK
+        TIMESTAMP timestamp
+        BOOLEAN taken
+        TIMESTAMP created_at
+    }
+    
+    MEDICATIONS ||--o{ DOSE_HISTORY : has
+```
+
+---
+
 ## 📋 Prérequis
 
 - Node.js **v18+**  
