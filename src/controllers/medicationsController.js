@@ -36,56 +36,67 @@ export class MedicationsController {
   }
 
   // Créer un nouveau médicament
-  async createMedication(req, res) {
-    try {
-      const userId = req.user.id;
-      const {
+// medicationsController.js - Vérifier la création
+async createMedication(req, res) {
+  try {
+    const userId = req.user.id;
+    const {
+      name,
+      dosage,
+      times,
+      startDate,
+      duration,
+      color,
+      reminderEnabled = true,
+      currentSupply = 0,
+      totalSupply = 0,
+      refillAt = 0,
+      refillReminder = false,
+      lastRefillDate = null
+    } = req.body;
+
+    // ✅ Validation des données requises
+    if (!name || !dosage || !startDate || !duration) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const medication = await sql`
+      INSERT INTO medications (
+        user_id, name, dosage, times, start_date, duration, color,
+        reminder_enabled, current_supply, total_supply, refill_at,
+        refill_reminder, last_refill_date
+      ) VALUES (
+        ${userId}, ${name}, ${dosage}, ${times}, ${startDate}, ${duration}, ${color},
+        ${reminderEnabled}, ${currentSupply}, ${totalSupply}, ${refillAt},
+        ${refillReminder}, ${lastRefillDate}
+      )
+      RETURNING 
+        id,
         name,
         dosage,
         times,
-        startDate,
+        start_date as "startDate",
         duration,
         color,
-        reminderEnabled = true,
-        currentSupply = 0,
-        totalSupply = 0,
-        refillAt = 0,
-        refillReminder = false,
-        lastRefillDate = null
-      } = req.body;
+        reminder_enabled as "reminderEnabled",
+        current_supply as "currentSupply",
+        total_supply as "totalSupply",
+        refill_at as "refillAt",
+        refill_reminder as "refillReminder",
+        last_refill_date as "lastRefillDate"
+    `;
 
-      const medication = await sql`
-        INSERT INTO medications (
-          user_id, name, dosage, times, start_date, duration, color,
-          reminder_enabled, current_supply, total_supply, refill_at,
-          refill_reminder, last_refill_date
-        ) VALUES (
-          ${userId}, ${name}, ${dosage}, ${times}, ${startDate}, ${duration}, ${color},
-          ${reminderEnabled}, ${currentSupply}, ${totalSupply}, ${refillAt},
-          ${refillReminder}, ${lastRefillDate}
-        )
-        RETURNING 
-          id,
-          name,
-          dosage,
-          times,
-          start_date as "startDate",
-          duration,
-          color,
-          reminder_enabled as "reminderEnabled",
-          current_supply as "currentSupply",
-          total_supply as "totalSupply",
-          refill_at as "refillAt",
-          refill_reminder as "refillReminder",
-          last_refill_date as "lastRefillDate"
-      `;
-
-      res.status(201).json(medication[0]);
-    } catch (error) {
-      console.error('Error creating medication:', error);
-      res.status(500).json({ error: 'Failed to create medication' });
+    // ✅ Vérifier que l'insertion a réussi
+    if (medication.length === 0) {
+      return res.status(500).json({ error: 'Failed to create medication' });
     }
+
+    res.status(201).json(medication[0]);
+  } catch (error) {
+    console.error('Error creating medication:', error);
+    res.status(500).json({ error: 'Failed to create medication' });
   }
+}
 
   // Mettre à jour un médicament
   async updateMedication(req, res) {
